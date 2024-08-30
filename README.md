@@ -1,6 +1,6 @@
-# my_project
+# Intern_Project
 
-A new Flutter project.
+Aleph Intern Flutter project.
 
 ## Getting Started
 
