@@ -89,6 +89,25 @@ class _ProductListScreenState extends State<ProductListScreen> {
                             Text('Created At: ${product.createdAt}'),
                             const SizedBox(height: 8),
                             Text('Updated At: ${product.updatedAt}'),
+                            const SizedBox(height: 16),
+                            if (product.images != null)
+                              Column(
+                                children: product.images!.map((image) {
+                                  String imageUrl = image.replaceAll('[', '').replaceAll(']', '').replaceAll('"', '');
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 8),
+                                    child: Image.network(
+                                      imageUrl,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        return const Text('Failed to load image');
+                                      },
+                                      width: 200,
+                                      height: 200,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
                           ],
                         ),
                       ),
@@ -110,70 +129,3 @@ class _ProductListScreenState extends State<ProductListScreen> {
     );
   }
 }
-// final getIt = GetIt.instance;
-//
-// void setup() {
-//   getIt.registerLazySingleton<ImageRepository>(() => ImageRepository());
-//   getIt.registerSingleton<ImageNotifier>(ImageNotifier(getIt<ImageRepository>()));
-// }
-//
-// class ImageScroll extends StatelessWidget {
-//   const ImageScroll({super.key});
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     final imageNotifier = getIt<ImageNotifier>();
-//
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: const Text('Image Scroll Project (ALL LENNOX)'),
-//       ),
-//       body: Center(
-//         child: Column(
-//           mainAxisAlignment: MainAxisAlignment.center,
-//           children: [
-//             Expanded(
-//               child: ValueListenableBuilder<int>(
-//                 valueListenable: imageNotifier,
-//                 builder: (context, imageIndex, child) {
-//                   return Image.asset(
-//                     imageNotifier.images[imageIndex].path,
-//                     fit: BoxFit.contain,
-//                   );
-//                 },
-//               ),
-//             ),
-//             const SizedBox(height: 20),
-//             Row(
-//               mainAxisAlignment: MainAxisAlignment.center,
-//               children: [
-//                 ElevatedButton(
-//                   onPressed: () {
-//                     imageNotifier.previousImage();
-//                   },
-//                   child: const Text('Previous'),
-//                 ),
-//                 const SizedBox(width: 20),
-//                 ElevatedButton(
-//                   onPressed: () {
-//                     imageNotifier.nextImage();
-//                   },
-//                   child: const Text('Next'),
-//                 ),
-//               ],
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
-//
-// void main() {
-//   setup();
-//   runApp(
-//     const MaterialApp(
-//       home: ImageScroll(),
-//     ),
-//   );
-// }
