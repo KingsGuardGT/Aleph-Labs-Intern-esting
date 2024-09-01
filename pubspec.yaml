@@ -42,7 +42,9 @@ dependencies:
   get_it: ^7.7.0
   dio: ^5.6.0
 
+
 dev_dependencies:
+  json_serializable: ^6.8.0
   build_runner: ^2.4.12
   custom_lint:
   riverpod_generator: ^2.4.2
@@ -57,7 +59,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^4.0.0
-  json_serializable: ^6.8.0
+
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

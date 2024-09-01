@@ -1,13 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get_it/get_it.dart';
-import 'package:my_project/repositories/image_repository.dart';
-import 'package:my_project/notifiers/image_notifier.dart';
-import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
 import 'package:my_project/notifiers/setup_get_it.dart';
 import 'package:my_project/repositories/product_service.dart';
-import 'package:my_project/models/product.dart';
+import 'models/product.dart';
 
 void main() {
   setup();
@@ -25,7 +19,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// Create a Screen to Display Products
 class ProductListScreen extends StatefulWidget {
   const ProductListScreen({super.key});
 
@@ -35,10 +28,15 @@ class ProductListScreen extends StatefulWidget {
 
 class _ProductListScreenState extends State<ProductListScreen> {
   late Future<List<Product>> _productsFuture;
+  List<bool> _isExpanded = [];
 
   @override
   void initState() {
     super.initState();
+    _loadProducts();
+  }
+
+  Future<void> _loadProducts() async {
     _productsFuture = getIt<ProductService>().getProducts();
   }
 
@@ -57,16 +55,44 @@ class _ProductListScreenState extends State<ProductListScreen> {
             return const Center(child: Text('No products found.'));
           } else {
             final products = snapshot.data!;
+            if (_isExpanded.length != products.length) {
+              _isExpanded = List<bool>.filled(products.length, false);
+            }
             return ListView.builder(
               itemCount: products.length,
               itemBuilder: (context, index) {
                 final product = products[index];
-                return ListTile(
-                  title: Text(product.title),
-                  subtitle: Text('\$${product.price}'),
-                  onTap: () {
-                    // Handle product tap
-                  },
+                return Column(
+                  children: [
+                    ListTile(
+                      title: Text(product.title),
+                      subtitle: Text('\$${product.price}'),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.expand_more),
+                        color: Colors.green,
+                        onPressed: () {
+                          setState(() {
+                            _isExpanded[index] = !_isExpanded[index];
+                          });
+                        },
+                      ),
+                    ),
+                    if (_isExpanded[index])
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        color: Colors.grey[200],
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Description: ${product.description}'),
+                            const SizedBox(height: 8),
+                            Text('Created At: ${product.createdAt}'),
+                            const SizedBox(height: 8),
+                            Text('Updated At: ${product.updatedAt}'),
+                          ],
+                        ),
+                      ),
+                  ],
                 );
               },
             );
@@ -76,7 +102,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           setState(() {
-            _productsFuture = getIt<ProductService>().getProducts();
+            _loadProducts();
           });
         },
         child: const Icon(Icons.refresh),
