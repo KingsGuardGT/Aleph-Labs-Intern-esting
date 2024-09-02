@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:my_project/notifiers/setup_get_it.dart';
-import 'package:my_project/repositories/product_service.dart';
-import 'models/product.dart';
+import 'package:my_project/data/notifiers/setup_get_it.dart';
+import 'package:my_project/data/repositories/product_service.dart';
+import 'package:my_project/data/models/product.dart';
 
 void main() {
   setup();
