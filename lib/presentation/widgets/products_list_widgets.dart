@@ -3,12 +3,10 @@ import 'package:flutter/material.dart';
 import '../../data/models/product.dart';
 
 class ProductListBody extends StatefulWidget {
-  final Future<List<Product>> productsFuture;
-  final Function toggleExpanded;
+  final Future<List<Product>> products;
 
   const ProductListBody({super.key, 
-    required this.productsFuture,
-    required this.toggleExpanded, required List<bool> isExpanded,
+    required this.products,
   });
 
   @override
@@ -16,12 +14,11 @@ class ProductListBody extends StatefulWidget {
 }
 
 class _ProductListBodyState extends State<ProductListBody> {
-  List<bool> _isExpanded = [];
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Product>>(
-      future: widget.productsFuture,
+      future: widget.products,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -31,22 +28,12 @@ class _ProductListBodyState extends State<ProductListBody> {
           return const Center(child: Text('No products found.'));
         } else {
           final products = snapshot.data!;
-          if (_isExpanded.length != products.length) {
-            _isExpanded = List<bool>.filled(products.length, false);
-          }
           return ListView.builder(
             itemCount: products.length,
             itemBuilder: (context, index) {
               final product = products[index];
               return ProductListItem(
                 product: product,
-                isExpanded: _isExpanded[index],
-                toggleExpanded: () => widget.toggleExpanded(index),
-                onExpansionChanged: (bool value) {
-                  setState(() {
-                    _isExpanded[index] = value;
-                  });
-                },
               );
             },
           );
@@ -56,41 +43,47 @@ class _ProductListBodyState extends State<ProductListBody> {
   }
 }
 
-class ProductListItem extends StatelessWidget {
+class ProductListItem extends StatefulWidget {
   final Product product;
-  final bool isExpanded;
-  final Function toggleExpanded;
-  final Function onExpansionChanged;
 
-  const ProductListItem({super.key, 
+  const ProductListItem({super.key,
     required this.product,
-    required this.isExpanded,
-    required this.toggleExpanded,
-    required this.onExpansionChanged,
+
   });
 
+  @override
+  _ProductListItemState createState() => _ProductListItemState();
+}
+
+  class _ProductListItemState extends State<ProductListItem> {
+  bool isExpanded = false;
+  void toggleExpanded() {
+    setState(() {
+      isExpanded = !isExpanded;
+    });
+  }
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         ListTile(
-          title: Text(product.title),
-          subtitle: Text('\$${product.price}'),
+          title: Text(widget.product.title),
+          subtitle: Text('\$${widget.product.price}'),
           trailing: IconButton(
             icon: const Icon(Icons.expand_more),
             color: Colors.green,
             onPressed: () {
               toggleExpanded();
-              onExpansionChanged(!isExpanded);
             },
           ),
         ),
         if (isExpanded)
-          ProductListExpandedItem(product: product),
+          ProductListExpandedItem(product: widget.product),
       ],
     );
   }
 }
+
 
 class ProductListExpandedItem extends StatelessWidget {
   final Product product;

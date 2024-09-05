@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:my_project/data/notifiers/setup_get_it.dart';
-import 'package:my_project/data/repositories/product_service.dart';
+import 'package:my_project/core/setup_get_it.dart';
+import 'package:my_project/data/notifiers/product_notifier.dart';
 import 'package:my_project/data/models/product.dart';
-import 'package:my_project/presentation/pages/products_list_screen.dart';
+import 'package:my_project/presentation/screen/products_list_screen.dart';
 
 void main() {
   setup();

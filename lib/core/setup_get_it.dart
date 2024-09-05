@@ -1,7 +1,7 @@
 import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
 import 'package:my_project/data/repositories/product_repository.dart';
-import 'package:my_project/data/repositories/product_service.dart';
+import 'package:my_project/data/notifiers/product_notifier.dart';
 
 final GetIt getIt = GetIt.instance;
 

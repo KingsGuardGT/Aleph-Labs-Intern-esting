@@ -1,4 +1,4 @@
-// services/product_service.dart
+// services/product_notifier.dart
 import 'package:get_it/get_it.dart';
 import '../repositories/product_repository.dart';
 import '../models/product.dart';

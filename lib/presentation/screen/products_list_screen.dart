@@ -1,21 +1,22 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import '../../core/setup_get_it.dart';
 import '../../data/repositories/product_repository.dart';
 import '../widgets/products_list_widgets.dart';
 import 'products_list_screen_state.dart';
 import '../../data/models/product.dart';
-import '../../data/repositories/product_service.dart';
+import '../../data/notifiers/product_notifier.dart';
 
 class ProductListScreen extends StatefulWidget {
   const ProductListScreen({super.key});
 
   @override
-  _ProductListScreenState createState() => _ProductListScreenState();
+  State<ProductListScreen> createState() => _ProductListScreenState();
 }
 
-class _ProductListScreenState extends ProductListState {
-  final ProductService _productService = ProductService(ProductRepository(Dio()));
-  final List<bool> _isExpanded = List<bool>.filled(6, false);
+class _ProductListScreenState extends State<ProductListScreen> {
+  late Future<List<Product>> _products = getIt<ProductService>().getProducts();
+
 
   @override
   void initState() {
@@ -24,7 +25,9 @@ class _ProductListScreenState extends ProductListState {
   }
 
   void _loadProducts() async {
-    // implement your product loading logic here
+    // setState(() async {
+    //   _products = getIt<ProductService>().getProducts();
+    // });
   }
 
   @override
@@ -32,10 +35,7 @@ class _ProductListScreenState extends ProductListState {
     return Scaffold(
       appBar: AppBar(title: const Text('Products')),
       body: ProductListBody(
-        productsFuture: _productService.getProducts(),
-        toggleExpanded: (index) => setState(() {
-          _isExpanded[index] = !_isExpanded[index];
-        }), isExpanded: [],
+        products: _products,
       ),
       floatingActionButton: ProductListFloatingActionButton(
         onPressed: _loadProducts,
