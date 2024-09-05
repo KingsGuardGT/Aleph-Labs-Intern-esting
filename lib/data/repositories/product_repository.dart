@@ -11,4 +11,6 @@ class ProductRepository {
     final response = await dio.get('https://api.escuelajs.co/api/v1/products');
     return (response.data as List).map((product) => Product.fromJson(product)).toList();
   }
+
+  getProducts() {}
 }
