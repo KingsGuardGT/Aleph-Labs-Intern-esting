@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:my_project/core/setup_get_it.dart';
-import 'package:my_project/data/notifiers/product_notifier.dart';
-import 'package:my_project/data/models/product.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_project/presentation/screen/products_list_screen.dart';
+import 'package:my_project/presentation/states/product_state.dart';
+
+import 'core/setup_get_it.dart';
 
 void main() {
-  setup();
-  runApp(const MyApp());
+  runApp(
+    const ProviderScope(
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

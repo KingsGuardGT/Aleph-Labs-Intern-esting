@@ -1,13 +1,13 @@
 // domain/entities/product.dart
 
 class Product {
-  final int id;
-  final String title;
-  final double price;
-  final String description;
-  final String createdAt;
-  final String updatedAt;
-  final List<String> images;
+  final int? id;
+  final String? title;
+  final double? price;
+  final String? description;
+  final String? createdAt;
+  final String? updatedAt;
+  final List<String>? images;
 
   Product({
     required this.id,

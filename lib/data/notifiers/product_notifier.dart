@@ -1,14 +1,27 @@
-// services/product_notifier.dart
-import 'package:get_it/get_it.dart';
-import '../repositories/product_repository.dart';
-import '../models/product.dart';
+// data/notifiers/product_notifier.dart
 
-class ProductService {
-  final ProductRepository _productRepository;
+import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_project/data/repositories/product_repository.dart';
 
-  ProductService(this._productRepository);
+import '../../domain/entities/entity.dart';
 
-  Future<List<Product>> getProducts() async {
-    return await _productRepository.fetchProducts();
+
+final productNotifierProvider = StateNotifierProvider<ProductNotifier, List<Product>>((ref) {
+  return ProductNotifier();
+});
+
+class ProductNotifier extends StateNotifier<List<Product>> {
+  ProductNotifier(): super([]);
+  final productRepository = ProductRepository(Dio());
+
+
+  Future<void> loadProducts() async {
+    final products = await productRepository.getProducts();
+    if (products != null) {
+      state = products;
+    } else {
+      state = []; // Set the state to an empty list if products is null
+    }
   }
 }

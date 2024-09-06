@@ -1,14 +1,20 @@
 // repositories/product_repository.dart
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
+import '../../core/setup_get_it.dart';
 import '../models/product.dart';
 
-class ProductRepository {
-  final Dio dio;
+final productRepositoryProvider = Provider<ProductRepository>((ref) {
+  return ProductRepository(ref.watch(dioProvider));
+});
 
-  ProductRepository(this.dio);
+class ProductRepository {
+  final Dio _dio;
+
+  ProductRepository(this._dio);
 
   Future<List<Product>> fetchProducts() async {
-    final response = await dio.get('https://api.escuelajs.co/api/v1/products');
+    final response = await _dio.get('https://api.escuelajs.co/api/v1/products');
     return (response.data as List).map((product) => Product.fromJson(product)).toList();
   }
 

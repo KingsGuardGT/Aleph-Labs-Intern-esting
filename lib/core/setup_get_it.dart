@@ -1,12 +1,13 @@
-import 'package:get_it/get_it.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import 'package:my_project/data/repositories/product_repository.dart';
 import 'package:my_project/data/notifiers/product_notifier.dart';
 
-final GetIt getIt = GetIt.instance;
+final dioProvider = Provider<Dio>((ref) {
+  return Dio();
+});
 
-void setup() {
-  getIt.registerLazySingleton<Dio>(() => Dio());
-  getIt.registerLazySingleton<ProductRepository>(() => ProductRepository(getIt<Dio>()));
-  getIt.registerLazySingleton<ProductService>(() => ProductService(getIt<ProductRepository>()));
-}
+final productRepositoryProvider = Provider<ProductRepository>((ref) {
+  return ProductRepository(ref.watch(dioProvider));
+});
+

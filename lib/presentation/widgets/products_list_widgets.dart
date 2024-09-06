@@ -1,97 +1,93 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_project/data/models/product.dart';
 
-import '../../data/models/product.dart';
+import '../../core/setup_get_it.dart';
 
-class ProductListBody extends StatefulWidget {
-  final Future<List<Product>> products;
+// This provider fetches the list of products from the repository.
+final productListProvider = FutureProvider<List<Product>>((ref) {
+  final productRepository = ref.watch(productRepositoryProvider);
+  return productRepository.fetchProducts();
+});
 
-  const ProductListBody({super.key, 
-    required this.products,
-  });
+// State provider for managing the expansion state for each product by its index.
+final isExpandedProvider = StateProvider.family<bool, int>((ref, index) => false);
+
+class ProductListBody extends ConsumerWidget {
+  const ProductListBody({super.key});
 
   @override
-  _ProductListBodyState createState() => _ProductListBodyState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Watching the product list async state.
+    final productsAsyncValue = ref.watch(productListProvider);
 
-class _ProductListBodyState extends State<ProductListBody> {
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<List<Product>>(
-      future: widget.products,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text(snapshot.error.toString()));
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('No products found.'));
-        } else {
-          final products = snapshot.data!;
-          return ListView.builder(
-            itemCount: products.length,
-            itemBuilder: (context, index) {
-              final product = products[index];
-              return ProductListItem(
-                product: product,
-              );
-            },
+    return productsAsyncValue.when(
+      data: (products) => products.isEmpty
+          ? const Center(child: Text('No products found.'))
+          : ListView.builder(
+        itemCount: products.length,
+        itemBuilder: (context, index) {
+          final product = products[index];
+          return ProductListItem(
+            product: product,
+            index: index,
           );
-        }
-      },
+        },
+      ),
+      error: (error, _) => Center(child: Text(error.toString())),
+      loading: () => const Center(child: CircularProgressIndicator()),
     );
   }
 }
 
-class ProductListItem extends StatefulWidget {
+class ProductListItem extends ConsumerWidget {
   final Product product;
+  final int index; // Pass index for unique expansion state management
 
-  const ProductListItem({super.key,
+  const ProductListItem({
+    super.key,
     required this.product,
-
+    required this.index,
   });
 
   @override
-  _ProductListItemState createState() => _ProductListItemState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Watching the expansion state for the current product based on index.
+    final isExpanded = ref.watch(isExpandedProvider(index));
 
-  class _ProductListItemState extends State<ProductListItem> {
-  bool isExpanded = false;
-  void toggleExpanded() {
-    setState(() {
-      isExpanded = !isExpanded;
-    });
-  }
-  @override
-  Widget build(BuildContext context) {
     return Column(
       children: [
         ListTile(
-          title: Text(widget.product.title),
-          subtitle: Text('\$${widget.product.price}'),
+          title: Text(product.title),
+          subtitle: Text('\$${product.price}'),
           trailing: IconButton(
-            icon: const Icon(Icons.expand_more),
+            icon: isExpanded
+                ? const Icon(Icons.expand_less)
+                : const Icon(Icons.expand_more),
             color: Colors.green,
             onPressed: () {
-              toggleExpanded();
+              // Toggling the expansion state for the current product.
+              ref
+                  .read(isExpandedProvider(index).notifier)
+                  .update((state) => !state);
             },
           ),
         ),
+        // If expanded, show the expanded product details.
         if (isExpanded)
-          ProductListExpandedItem(product: widget.product),
+          ProductListExpandedItem(product: product),
       ],
     );
   }
 }
 
-
-class ProductListExpandedItem extends StatelessWidget {
+class ProductListExpandedItem extends ConsumerWidget {
   final Product product;
 
   const ProductListExpandedItem({super.key, required this.product});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.all(16),
       color: Colors.grey[200],
@@ -128,13 +124,13 @@ class ProductListExpandedItem extends StatelessWidget {
   }
 }
 
-class ProductListFloatingActionButton extends StatelessWidget {
+class ProductListFloatingActionButton extends ConsumerWidget {
   final Function onPressed;
 
   const ProductListFloatingActionButton({super.key, required this.onPressed});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return FloatingActionButton(
       onPressed: () => onPressed(),
       child: const Icon(Icons.refresh),
