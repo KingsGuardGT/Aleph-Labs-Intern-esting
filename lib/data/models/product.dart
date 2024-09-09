@@ -9,10 +9,10 @@ class Product with _$Product {
     required int id,
     required String title,
     required double price,
-    String description,  // Made nullable
-    List<String> images,  // Made nullable
-    DateTime createdAt,  // Made nullable
-    DateTime updatedAt,  // Made nullable
+    String? description,  // Made nullable
+    List<String>? images,  // Made nullable
+    DateTime? creationAt,  // Made nullable
+    DateTime? updatedAt,  // Made nullable
   }) = _Product;
 
   factory Product.fromJson(Map<String, dynamic> json) => _$ProductFromJson(json);

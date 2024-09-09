@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_project/data/models/product.dart';
 
-class ProductListExpandedItem extends StatelessWidget {
+class ProductListExpandedItem extends ConsumerWidget {
   final Product product;
 
   const ProductListExpandedItem({super.key, required this.product});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.all(16),
       color: Colors.grey[200],
@@ -16,9 +17,9 @@ class ProductListExpandedItem extends StatelessWidget {
         children: [
           Text('Description: ${product.description}'),
           const SizedBox(height: 8),
-          Text('Created At: ${product.createdAt}'),
-          const SizedBox(height: 8),
-          Text('Updated At: ${product.updatedAt}'),
+          Text('Created At: ${product.creationAt ?? 'Not available'}'),
+          const SizedBox(height: 16),
+          Text('Updated At: ${product.updatedAt ?? 'Not available'}'),
           const SizedBox(height: 16),
           if (product.images != null)
             Column(

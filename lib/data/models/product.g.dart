@@ -14,9 +14,9 @@ _$ProductImpl _$$ProductImplFromJson(Map<String, dynamic> json) =>
       description: json['description'] as String?,
       images:
           (json['images'] as List<dynamic>?)?.map((e) => e as String).toList(),
-      createdAt: json['createdAt'] == null
+      creationAt: json['creationAt'] == null
           ? null
-          : DateTime.parse(json['createdAt'] as String),
+          : DateTime.parse(json['creationAt'] as String),
       updatedAt: json['updatedAt'] == null
           ? null
           : DateTime.parse(json['updatedAt'] as String),
@@ -29,6 +29,6 @@ Map<String, dynamic> _$$ProductImplToJson(_$ProductImpl instance) =>
       'price': instance.price,
       'description': instance.description,
       'images': instance.images,
-      'createdAt': instance.createdAt?.toIso8601String(),
+      'creationAt': instance.creationAt?.toIso8601String(),
       'updatedAt': instance.updatedAt?.toIso8601String(),
     };

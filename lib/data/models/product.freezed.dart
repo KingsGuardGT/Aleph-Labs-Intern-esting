@@ -27,7 +27,7 @@ mixin _$Product {
       throw _privateConstructorUsedError; // Made nullable
   List<String>? get images =>
       throw _privateConstructorUsedError; // Made nullable
-  DateTime? get createdAt =>
+  DateTime? get creationAt =>
       throw _privateConstructorUsedError; // Made nullable
   DateTime? get updatedAt => throw _privateConstructorUsedError;
 
@@ -51,7 +51,7 @@ abstract class $ProductCopyWith<$Res> {
       double price,
       String? description,
       List<String>? images,
-      DateTime? createdAt,
+      DateTime? creationAt,
       DateTime? updatedAt});
 }
 
@@ -75,7 +75,7 @@ class _$ProductCopyWithImpl<$Res, $Val extends Product>
     Object? price = null,
     Object? description = freezed,
     Object? images = freezed,
-    Object? createdAt = freezed,
+    Object? creationAt = freezed,
     Object? updatedAt = freezed,
   }) {
     return _then(_value.copyWith(
@@ -99,9 +99,9 @@ class _$ProductCopyWithImpl<$Res, $Val extends Product>
           ? _value.images
           : images // ignore: cast_nullable_to_non_nullable
               as List<String>?,
-      createdAt: freezed == createdAt
-          ? _value.createdAt
-          : createdAt // ignore: cast_nullable_to_non_nullable
+      creationAt: freezed == creationAt
+          ? _value.creationAt
+          : creationAt // ignore: cast_nullable_to_non_nullable
               as DateTime?,
       updatedAt: freezed == updatedAt
           ? _value.updatedAt
@@ -124,7 +124,7 @@ abstract class _$$ProductImplCopyWith<$Res> implements $ProductCopyWith<$Res> {
       double price,
       String? description,
       List<String>? images,
-      DateTime? createdAt,
+      DateTime? creationAt,
       DateTime? updatedAt});
 }
 
@@ -146,7 +146,7 @@ class __$$ProductImplCopyWithImpl<$Res>
     Object? price = null,
     Object? description = freezed,
     Object? images = freezed,
-    Object? createdAt = freezed,
+    Object? creationAt = freezed,
     Object? updatedAt = freezed,
   }) {
     return _then(_$ProductImpl(
@@ -170,9 +170,9 @@ class __$$ProductImplCopyWithImpl<$Res>
           ? _value._images
           : images // ignore: cast_nullable_to_non_nullable
               as List<String>?,
-      createdAt: freezed == createdAt
-          ? _value.createdAt
-          : createdAt // ignore: cast_nullable_to_non_nullable
+      creationAt: freezed == creationAt
+          ? _value.creationAt
+          : creationAt // ignore: cast_nullable_to_non_nullable
               as DateTime?,
       updatedAt: freezed == updatedAt
           ? _value.updatedAt
@@ -191,7 +191,7 @@ class _$ProductImpl implements _Product {
       required this.price,
       this.description,
       final List<String>? images,
-      this.createdAt,
+      this.creationAt,
       this.updatedAt})
       : _images = images;
 
@@ -220,14 +220,14 @@ class _$ProductImpl implements _Product {
 
 // Made nullable
   @override
-  final DateTime? createdAt;
+  final DateTime? creationAt;
 // Made nullable
   @override
   final DateTime? updatedAt;
 
   @override
   String toString() {
-    return 'Product(id: $id, title: $title, price: $price, description: $description, images: $images, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'Product(id: $id, title: $title, price: $price, description: $description, images: $images, creationAt: $creationAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -241,8 +241,8 @@ class _$ProductImpl implements _Product {
             (identical(other.description, description) ||
                 other.description == description) &&
             const DeepCollectionEquality().equals(other._images, _images) &&
-            (identical(other.createdAt, createdAt) ||
-                other.createdAt == createdAt) &&
+            (identical(other.creationAt, creationAt) ||
+                other.creationAt == creationAt) &&
             (identical(other.updatedAt, updatedAt) ||
                 other.updatedAt == updatedAt));
   }
@@ -250,7 +250,7 @@ class _$ProductImpl implements _Product {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, id, title, price, description,
-      const DeepCollectionEquality().hash(_images), createdAt, updatedAt);
+      const DeepCollectionEquality().hash(_images), creationAt, updatedAt);
 
   /// Create a copy of Product
   /// with the given fields replaced by the non-null parameter values.
@@ -275,7 +275,7 @@ abstract class _Product implements Product {
       required final double price,
       final String? description,
       final List<String>? images,
-      final DateTime? createdAt,
+      final DateTime? creationAt,
       final DateTime? updatedAt}) = _$ProductImpl;
 
   factory _Product.fromJson(Map<String, dynamic> json) = _$ProductImpl.fromJson;
@@ -291,7 +291,7 @@ abstract class _Product implements Product {
   @override
   List<String>? get images; // Made nullable
   @override
-  DateTime? get createdAt; // Made nullable
+  DateTime? get creationAt; // Made nullable
   @override
   DateTime? get updatedAt;
 

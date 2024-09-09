@@ -1,40 +1,46 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_project/data/models/product.dart';
 import 'package:my_project/presentation/widgets/products_list_expanded_item.dart';
 
-class ProductListItem extends StatefulWidget {
+final isExpandedProvider = StateProvider.family<bool, int>((ref, index) => false);
+
+class ProductListItem extends ConsumerWidget {
   final Product product;
+  final int index; // Pass index for unique expansion state management
 
-  const ProductListItem({super.key, required this.product});
-
-  @override
-  _ProductListItemState createState() => _ProductListItemState();
-}
-
-class _ProductListItemState extends State<ProductListItem> {
-  bool isExpanded = false;
-
-  void toggleExpanded() {
-    setState(() {
-      isExpanded = !isExpanded;
-    });
-  }
+  const ProductListItem({
+    super.key,
+    required this.product,
+    required this.index,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Watching the expansion state for the current product based on index.
+    final isExpanded = ref.watch(isExpandedProvider(index));
+
     return Column(
       children: [
         ListTile(
-          title: Text(widget.product.title),
-          subtitle: Text('\$${widget.product.price}'),
+          title: Text(product.title),
+          subtitle: Text('\$${product.price}'),
           trailing: IconButton(
-            icon: const Icon(Icons.expand_more),
+            icon: isExpanded
+                ? const Icon(Icons.expand_less)
+                : const Icon(Icons.expand_more),
             color: Colors.green,
-            onPressed: toggleExpanded,
+            onPressed: () {
+              // Toggling the expansion state for the current product.
+              ref
+                  .read(isExpandedProvider(index).notifier)
+                  .update((state) => !state);
+            },
           ),
         ),
+        // If expanded, show the expanded product details.
         if (isExpanded)
-          ProductListExpandedItem(product: widget.product),
+          ProductListExpandedItem(product: product),
       ],
     );
   }

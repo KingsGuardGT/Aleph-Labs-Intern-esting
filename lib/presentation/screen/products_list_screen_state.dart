@@ -1,6 +1,6 @@
 // import 'package:flutter/material.dart';
 // import 'package:my_project/presentation/screen/products_list_screen.dart';
-// import 'package:my_project/presentation/widgets/products_list_widgets.dart';
+// import 'package:my_project/presentation/widgets/products_list_floating_action_button.dart';
 //
 // import '../../data/models/product.dart';
 // import '../../data/notifiers/setup_get_it.dart';

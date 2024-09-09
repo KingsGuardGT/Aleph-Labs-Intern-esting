@@ -17,6 +17,12 @@ class ProductRepository {
     final response = await _dio.get('https://api.escuelajs.co/api/v1/products');
     return (response.data as List).map((product) => Product.fromJson(product)).toList();
   }
+  Future<void> refreshProducts() async {
+    // Implement your logic to refresh the product list using Dio
+    await _dio.get('/products');
+    // Process the response and update the product list
+  }
+
 
   getProducts() {}
 }
