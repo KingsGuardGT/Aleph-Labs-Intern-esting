@@ -1,28 +1,23 @@
-// repositories/product_repository.dart
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:dio/dio.dart';
-import '../../core/setup_get_it.dart';
-import '../models/product.dart';
+// data/repositories/product_repository.dart
 
-final productRepositoryProvider = Provider<ProductRepository>((ref) {
-  return ProductRepository(ref.watch(dioProvider));
-});
+import 'package:dio/dio.dart';
+import '../models/product.dart';
 
 class ProductRepository {
   final Dio _dio;
 
   ProductRepository(this._dio);
 
-  Future<List<Product>> fetchProducts() async {
-    final response = await _dio.get('https://api.escuelajs.co/api/v1/products');
-    return (response.data as List).map((product) => Product.fromJson(product)).toList();
-  }
-  Future<void> refreshProducts() async {
-    // Implement your logic to refresh the product list using Dio
-    await _dio.get('/products');
-    // Process the response and update the product list
-  }
+  /// Fetch products with pagination (limit and offset)
+  Future<List<Product>> fetchProducts({int page = 1, int limit = 10}) async {
+    // Offset-based pagination (API-specific)
+    final response = await _dio.get('https://api.escuelajs.co/api/v1/products', queryParameters: {
+      'offset': (page - 1) * limit, // Calculate the offset
+      'limit': limit, // Limit number of products per request
+    });
 
+    final List<dynamic> data = response.data;
 
-  getProducts() {}
+    return data.map((item) => Product.fromJson(item)).toList();
+  }
 }
