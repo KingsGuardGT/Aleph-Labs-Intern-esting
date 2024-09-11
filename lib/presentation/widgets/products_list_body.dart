@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_project/data/notifiers/product_notifier.dart';
 import 'package:my_project/presentation/widgets/products_list_item.dart';
+import 'package:my_project/presentation/widgets/products_list_pagination.dart';
 
 import '../../data/models/product.dart';
 
@@ -83,27 +84,7 @@ class _ProductListBodyState extends ConsumerState<ProductListBody> {
           ),
         ),
         // Page Navigation Controls
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              ElevatedButton(
-                onPressed: currentPage > 1
-                    ? () => ref.read(productNotifierProvider.notifier).previousPage()
-                    : null, // Disable button on the first page
-                child: const Text('Previous Page'),
-              ),
-              Text('Page $currentPage'), // Display the current page number
-              ElevatedButton(
-                onPressed: hasMore
-                    ? () => ref.read(productNotifierProvider.notifier).nextPage()
-                    : null, // Disable button if no more pages
-                child: const Text('Next Page'),
-              ),
-            ],
-          ),
-        ),
+        PaginationWidget()
       ],
     );
 

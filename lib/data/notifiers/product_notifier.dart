@@ -21,6 +21,7 @@ class ProductNotifier extends StateNotifier<List<dynamic>> {
   ProductNotifier(this._productRepository) : super([]);
 
   bool get isLoading => _isLoading;
+  int get totalPages => _totalPages;
   int get currentPage => _currentPage;
   bool get hasMore => _hasMore;
 
@@ -39,7 +40,7 @@ class ProductNotifier extends StateNotifier<List<dynamic>> {
         _hasMore = false; // No more products available
       } else {
         // Set total pages manually (for this example), could come from API in a real case
-        _totalPages = 10; // For example, assume 10 pages
+        _totalPages = 50; // For example, assume 10 pages
 
         // Update the state
         state = [...newProducts];
