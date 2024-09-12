@@ -1,92 +1,48 @@
-// presentation/widgets/product_list_body.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:my_project/data/notifiers/product_notifier.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
+import 'package:my_project/data/models/product.dart';
 import 'package:my_project/presentation/widgets/products_list_item.dart';
+import 'package:my_project/data/notifiers/product_notifier.dart';
 import 'package:my_project/presentation/widgets/products_list_pagination.dart';
 
-import '../../data/models/product.dart';
 
-class ProductListBody extends ConsumerStatefulWidget {
+class ProductListBody extends ConsumerWidget {
   const ProductListBody({super.key});
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() => _ProductListBodyState();
-}
-
-class _ProductListBodyState extends ConsumerState<ProductListBody> {
-  final _scrollController = ScrollController(); // Track scrolling
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(_onScroll); // Attach scroll listener
-    ref.read(productNotifierProvider.notifier).loadProducts(); // Load initial products
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose(); // Clean up the scroll controller
-    super.dispose();
-  }
-
-  /// Scroll listener to detect when the user reaches the bottom
-  void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent &&
-        !_scrollController.position.outOfRange) {
-      // User has scrolled to the bottom, so load more products
-      ref.read(productNotifierProvider.notifier).nextPage();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final items = ref.watch(productNotifierProvider); // Watch the product list
-    final isLoading = ref.watch(productNotifierProvider.notifier).isLoading;
-    final currentPage = ref.watch(productNotifierProvider.notifier).currentPage;
-    final hasMore = ref.watch(productNotifierProvider.notifier).hasMore;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final productNotifier = ref.watch(productNotifierProvider);
+    final pagingController = productNotifier.pagingController;
 
     return Column(
       children: [
         Expanded(
-          child: ListView.builder(
-            controller: _scrollController,
-            itemCount: items.isNotEmpty ? items.length + (isLoading ? 1 : 0) : 1, // If empty, show a single item (empty state or loader)
-            itemBuilder: (context, index) {
-              if (items.isEmpty) {
-                // Handle empty list state
-                return const Center(
-                  child: Text("No products available"),
-                );
-              }
-
-              if (index < items.length) {
-                final item = items[index];
-                if (item is Product) {
-                  // Render product item
-                  return ProductListItem(
-                    product: item,
-                    index: index,
-                  );
-                }
-              }
-
-              // If it's the last index and we're loading more, show a loading spinner
-              if (index == items.length && isLoading) {
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
-              }
-
-              return const SizedBox.shrink(); // Avoid RangeError for invalid cases
-            },
+          child: PagedListView<int, Product>(
+            pagingController: pagingController, // Attach the PagingController
+            builderDelegate: PagedChildBuilderDelegate<Product>(
+              itemBuilder: (context, product, index) => ProductListItem(
+                product: product,
+                index: index,
+              ),
+              firstPageProgressIndicatorBuilder: (_) => const Center(
+                child: CircularProgressIndicator(),
+              ),
+              newPageProgressIndicatorBuilder: (_) => const Center(
+                child: CircularProgressIndicator(),
+              ),
+              firstPageErrorIndicatorBuilder: (context) => const Center(
+                child: Text("Error loading products."),
+              ),
+              noItemsFoundIndicatorBuilder: (context) => const Center(
+                child: Text("No products available."),
+              ),
+            ),
           ),
         ),
-        // Page Navigation Controls
-        PaginationWidget()
+        // Manual Pagination Buttons
+        // const PaginationWidget(),
       ],
     );
-
   }
 }

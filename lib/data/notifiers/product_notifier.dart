@@ -1,76 +1,50 @@
-// data/notifiers/product_notifier.dart
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:my_project/data/models/product.dart';
 import 'package:my_project/data/repositories/product_repository.dart';
 
 import '../../core/setup_get_it.dart';
 
-final productNotifierProvider = StateNotifierProvider<ProductNotifier, List<dynamic>>((ref) {
+final productNotifierProvider = Provider<ProductNotifier>((ref) {
   return ProductNotifier(ref.watch(productRepositoryProvider));
 });
 
-class ProductNotifier extends StateNotifier<List<dynamic>> {
+class ProductNotifier {
   final ProductRepository _productRepository;
+  static const _pageSize = 20;
 
-  int _currentPage = 1; // Start at page 1
-  int _totalPages = 0; // Total pages
-  bool _isLoading = false;
-  bool _hasMore = true;
+  // Define the PagingController for managing pagination
+  final PagingController<int, Product> pagingController =
+  PagingController(firstPageKey: 1);
 
-  ProductNotifier(this._productRepository) : super([]);
+  ProductNotifier(this._productRepository) {
+    // Set up the page request listener for PagingController
+    pagingController.addPageRequestListener((pageKey) {
+      _fetchPage(pageKey);
+    });
+  }
 
-  bool get isLoading => _isLoading;
-  int get totalPages => _totalPages;
-  int get currentPage => _currentPage;
-  bool get hasMore => _hasMore;
-
-  /// Load products for the given page
-  Future<void> loadProducts({int page = 1}) async {
-    if (_isLoading) return;
-
-    _isLoading = true;
-    _currentPage = page; // Update current page
-
+  /// Fetch products for a specific page using PagingController
+  Future<void> _fetchPage(int pageKey) async {
     try {
-      // Fetch products for the current page
-      final newProducts = await _productRepository.fetchProducts(page: _currentPage);
+      // Fetch the products from the repository for the given page
+      final newProducts = await _productRepository.fetchProducts(page: pageKey, limit: _pageSize);
 
-      if (newProducts.isEmpty) {
-        _hasMore = false; // No more products available
+      // Check if it's the last page (i.e., fewer products than the page size)
+      final isLastPage = newProducts.length < _pageSize;
+      if (isLastPage) {
+        pagingController.appendLastPage(newProducts);
       } else {
-        // Set total pages manually (for this example), could come from API in a real case
-        _totalPages = 50; // For example, assume 10 pages
-
-        // Update the state
-        state = [...newProducts];
+        final nextPageKey = pageKey + 1;
+        pagingController.appendPage(newProducts, nextPageKey);
       }
-    } catch (e) {
-      print('Error loading products: $e');
-    } finally {
-      _isLoading = false;
+    } catch (error) {
+      pagingController.error = error;
     }
   }
 
-  /// Move to the next page (if not the last one)
-  Future<void> nextPage() async {
-    if (_currentPage < _totalPages) {
-      await loadProducts(page: _currentPage + 1);
-    }
-  }
-
-  /// Move to the previous page (if not the first one)
-  Future<void> previousPage() async {
-    if (_currentPage > 1) {
-      await loadProducts(page: _currentPage - 1);
-    }
-  }
-
-  /// Refresh the product list and reset pagination
-  Future<void> refreshProducts() async {
-    _currentPage = 1;
-    _hasMore = true;
-    state = [];
-    await loadProducts(page: 1);
+  // Dispose the PagingController when no longer needed
+  void dispose() {
+    pagingController.dispose();
   }
 }
