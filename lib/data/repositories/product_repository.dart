@@ -11,13 +11,13 @@ class ProductRepository {
     try {
       // Make the GET request to fetch products
       final response = await _dio.get('https://api.escuelajs.co/api/v1/products', queryParameters: {
-        'page': page, // Current page
-        'per_page': limit, // Number of products per page
+        'page': page,  // Pass the current page
+        'per_page': limit,  // Number of products per page
       });
 
       final List<dynamic> data = response.data;
 
-      // Convert JSON response to a list of Product objects
+      // Convert the JSON response to a list of Product objects
       return data.map((item) => Product.fromJson(item)).toList();
     } catch (error) {
       // Handle error and rethrow it to the notifier

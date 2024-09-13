@@ -44,8 +44,9 @@ dependencies:
   dio: ^5.6.0
   infinite_scroll_pagination: ^4.0.0
   riverpod_infinite_scroll: ^1.0.11
-
-
+  flex_color_scheme: ^7.3.1
+  google_fonts: ^6.2.1
+  json_theme: ^6.5.3
 
 dev_dependencies:
   json_serializable: ^6.8.0
@@ -77,6 +78,7 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   assets:
+  - lib/theme/appainter_theme.json
   - lib/images/image1.jpg
   - lib/images/image2.jpg
   - lib/images/image3.jpg

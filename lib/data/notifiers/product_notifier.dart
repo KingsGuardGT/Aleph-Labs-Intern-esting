@@ -11,7 +11,7 @@ final productNotifierProvider = Provider<ProductNotifier>((ref) {
 
 class ProductNotifier {
   final ProductRepository _productRepository;
-  static const _pageSize = 20;
+  static const int _pageSize = 20;
 
   // Define the PagingController for managing pagination
   final PagingController<int, Product> pagingController =
@@ -28,18 +28,21 @@ class ProductNotifier {
   Future<void> _fetchPage(int pageKey) async {
     try {
       // Fetch the products from the repository for the given page
-      final newProducts = await _productRepository.fetchProducts(page: pageKey, limit: _pageSize);
+      final newProducts = await _productRepository.fetchProducts(
+        page: pageKey,
+        limit: _pageSize,
+      );
 
       // Check if it's the last page (i.e., fewer products than the page size)
       final isLastPage = newProducts.length < _pageSize;
       if (isLastPage) {
-        pagingController.appendLastPage(newProducts);
+        pagingController.appendLastPage(newProducts);  // Last page reached
       } else {
         final nextPageKey = pageKey + 1;
-        pagingController.appendPage(newProducts, nextPageKey);
+        pagingController.appendPage(newProducts, nextPageKey);  // Fetch next page
       }
     } catch (error) {
-      pagingController.error = error;
+      pagingController.error = error;  // Set error state if fetching fails
     }
   }
 
