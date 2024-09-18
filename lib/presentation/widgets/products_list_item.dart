@@ -56,24 +56,39 @@ class ProductListItem extends ConsumerWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Title of the product
           Text(
             product.title,
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
+
+          // Price of the product
           Text(
             '\$${product.price.toStringAsFixed(2)}',
             style: const TextStyle(fontSize: 18, color: Colors.green),
           ),
           const SizedBox(height: 8),
-          Text(product.description ?? ''),
+
+          // Description, shortened or expanded based on isExpanded
+          Text(
+            isExpanded
+                ? product.description ?? '' // Full description
+                : (product.description != null && product.description!.length > 50
+                ? '${product.description!.substring(0, 50)}...' // Shortened description
+                : product.description ?? ''), // Fallback for short description
+          ),
           const SizedBox(height: 8),
+
+          // Expand/Collapse Button
           IconButton(
             icon: Icon(isExpanded ? Icons.expand_less : Icons.expand_more),
             onPressed: () {
               ref.read(isExpandedProvider(index).notifier).update((state) => !state);
             },
           ),
+
+          // Conditionally render extra content if expanded
           if (isExpanded)
             Padding(
               padding: const EdgeInsets.only(top: 8.0),
@@ -95,7 +110,12 @@ class ProductListItem extends ConsumerWidget {
             children: [
               buildImage(),
               const SizedBox(width: 20),
-              Expanded(child: buildContent()),
+              // Ensure content does not overflow by wrapping it with Expanded
+              Expanded(
+                child: SingleChildScrollView(
+                  child: buildContent(),
+                ),
+              ),
             ],
           )
               : Column(
@@ -103,7 +123,10 @@ class ProductListItem extends ConsumerWidget {
             children: [
               buildImage(),
               const SizedBox(height: 16),
-              buildContent(),
+              // Wrap in SingleChildScrollView to prevent overflow in small screens
+              SingleChildScrollView(
+                child: buildContent(),
+              ),
             ],
           ),
         ),

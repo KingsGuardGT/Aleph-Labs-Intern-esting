@@ -21,35 +21,46 @@ class ProductListBody extends ConsumerWidget {
 
     return RefreshIndicator(
       onRefresh: () => Future.sync(() => pagingController.refresh()),  // Refresh the entire list
-      child: PagedListView<int, Product>(
+      child: isLargeScreen
+          ? LayoutBuilder(  // LayoutBuilder to manage constraints better
+        builder: (context, constraints) {
+          return PagedGridView<int, Product>(
+            pagingController: pagingController,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,  // Make it a 3-column grid
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              childAspectRatio: 1 / 1.5,  // Control height/width ratio for grid items
+            ),
+            builderDelegate: PagedChildBuilderDelegate<Product>(
+              animateTransitions: true,
+              itemBuilder: (context, product, index) {
+                return ProductListItem(
+                  product: product,
+                  index: index,
+                );
+              },
+              firstPageProgressIndicatorBuilder: (_) => const Center(
+                child: CircularProgressIndicator(),  // Loading indicator for the first page
+              ),
+              newPageProgressIndicatorBuilder: (_) => const Center(
+                child: CircularProgressIndicator(),  // Loading indicator for additional pages
+              ),
+              firstPageErrorIndicatorBuilder: (context) => const Center(
+                child: Text("Error loading products."),  // Error state for the first page
+              ),
+              noItemsFoundIndicatorBuilder: (context) => const Center(
+                child: Text("No products available."),  // Empty state if no items are found
+              ),
+            ),
+          );
+        },
+      )
+          : PagedListView<int, Product>(
         pagingController: pagingController,
         builderDelegate: PagedChildBuilderDelegate<Product>(
           animateTransitions: true,
           itemBuilder: (context, product, index) {
-            // For larger screens, display items in a grid
-            if (isLargeScreen) {
-              return Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: GridView.builder(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: screenWidth > 1200 ? 4 : 2,  // Switch between 2 or 4 columns based on screen width
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    childAspectRatio: 1 / 1.5,  // Control height/width ratio for grid items
-                  ),
-                  itemCount: pagingController.itemList?.length ?? 0,
-                  itemBuilder: (context, gridIndex) {
-                    final product = pagingController.itemList?[gridIndex];
-                    return ProductListItem(
-                      product: product!,
-                      index: gridIndex,
-                    );
-                  },
-                ),
-              );
-            }
-
-            // For smaller screens (mobile), keep the list view
             return ProductListItem(
               product: product,
               index: index,

@@ -15,8 +15,6 @@ class ProductListExpandedItem extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Description: ${product.description}'),
-          const SizedBox(height: 8),
           Text('Created At: ${product.creationAt ?? 'Not available'}'),
           const SizedBox(height: 16),
           Text('Updated At: ${product.updatedAt ?? 'Not available'}'),
