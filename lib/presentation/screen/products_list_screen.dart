@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:my_project/presentation/widgets/products_list_body.dart';
-import 'package:my_project/data/notifiers/product_notifier.dart';
+import '../../data/notifiers/product_notifier.dart';
+import '../../data/notifiers/sidebar_controller_provider.dart';
+import '../widgets/products_list_body.dart';
+import '../widgets/products_sidebar.dart';  // Import the ExampleSidebarX widget
 
 class ProductListScreen extends ConsumerStatefulWidget {
   const ProductListScreen({super.key});
@@ -14,14 +16,12 @@ class ProductListScreen extends ConsumerStatefulWidget {
 class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   @override
   void dispose() {
-    // Dispose the PagingController when no longer needed
     ref.read(productNotifierProvider).pagingController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // Get the screen width to adjust AppBar content
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
@@ -39,9 +39,14 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
             ),
           ),
         ]
-            : null, // No search button for smaller screens
+            : null,
       ),
-      body: const ProductListBody(), // Display the product list
+      drawer: const ExampleSidebarX(),  // Use ExampleSidebarX here instead of SidebarX
+      body: const Column(
+        children: [
+          Expanded(child: ProductListBody()),  // Show product list body
+        ],
+      ),
     );
   }
 }

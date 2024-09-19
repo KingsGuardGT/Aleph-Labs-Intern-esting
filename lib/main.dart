@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_project/presentation/screen/products_list_screen.dart';
-import 'package:my_project/theme/app_theme.dart';  // Import the theme provider
+import 'package:my_project/presentation/screen/products_sidebar_screen.dart';
+import 'package:my_project/theme/app_theme.dart';
 
 void main() {
   runApp(
@@ -21,7 +22,11 @@ class MyApp extends ConsumerWidget {
 
     return MaterialApp(
       theme: theme,  // Apply the theme to MaterialApp
-      home: const ProductListScreen(),
+      initialRoute: '/',  // Define the initial route
+      routes: {
+        '/': (context) => const ProductListScreen(),
+        '/screens_example': (context) => const ScreensExample(),
+      },
     );
   }
 }
