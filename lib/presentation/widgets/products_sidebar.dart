@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_project/presentation/screen/products_list_screen.dart';
 import '../../data/notifiers/sidebar_controller_provider.dart';
 import 'package:sidebarx/sidebarx.dart';
+import '../../table/table.dart'; // Import the new Table page (we'll create this next)
 
 class ExampleSidebarX extends ConsumerWidget {
   const ExampleSidebarX({super.key});
@@ -61,26 +63,49 @@ class ExampleSidebarX extends ConsumerWidget {
           color: Color(0xFF2E2E48),
         ),
       ),
-      items: const [
+      items: [
         SidebarXItem(
           icon: Icons.home,
           label: 'Home',
+          onTap: () {
+            // Handle Home Navigation (Optional)
+          },
         ),
         SidebarXItem(
           icon: Icons.table_view,
           label: 'Products',
+          onTap: () {
+            // Push a new page to display the DataTableDemo
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ProductListScreen()),
+            );
+          },
         ),
         SidebarXItem(
           icon: Icons.table_chart_outlined,
           label: 'Table',
+          onTap: () {
+            // Push a new page to display the DataTableDemo
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const TablePage()),
+            );
+          },
         ),
         SidebarXItem(
           icon: Icons.favorite,
           label: 'Favorites',
+          onTap: () {
+            // Handle Favorites Navigation (Optional)
+          },
         ),
         SidebarXItem(
           icon: Icons.search,
           label: 'Search',
+          onTap: () {
+            // Handle Search Navigation (Optional)
+          },
         ),
       ],
     );

@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_project/table/screens/data_table2_fixed_nm.dart';
 
+import '../presentation/widgets/products_sidebar.dart';
 import 'nav_helper.dart';
 import 'screens/async_paginated_data_table2.dart';
 import 'screens/data_table.dart';
@@ -15,7 +17,7 @@ import 'screens/paginated_data_table2.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 
-const String initialRoute = '/datatable2';
+const String initialRoute = '/';
 
 Scaffold _getScaffold(BuildContext context, Widget body,
     [List<String>? options]) {
@@ -124,46 +126,64 @@ String _getCurrentRoute(BuildContext context) {
 }
 
 // ignore: use_key_in_widget_constructors
-class Table extends StatelessWidget {
+class TablePage extends ConsumerWidget {
+  const TablePage({super.key});
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
       restorationScopeId: 'main',
       title: 'Flutter Demo',
       theme: ThemeData(
         primaryColor: Colors.grey[300],
       ),
-      initialRoute: initialRoute,
-
+      initialRoute: '/datatable2', // Set initial route
       routes: {
-        '/datatable2': (context) {
-          final currentRouteOption = getCurrentRouteOption(context);
-          return _getScaffold(
-              context,
-              currentRouteOption == rounded
-                  ? const DataTable2RoundedDemo()
-                  : const DataTable2Demo(),
-              getOptionsForRoute('/datatable2'));
-        },
-        '/datatable2simple': (context) =>
-            _getScaffold(context, const DataTable2SimpleDemo()),
-        '/datatable2scrollup': (context) =>
-            _getScaffold(context, const DataTable2ScrollupDemo()),
-        '/datatable2fixedmn': (context) => _getScaffold(
-            context,
-            const DataTable2FixedNMDemo(),
-            getOptionsForRoute('/datatable2fixedmn')),
-        '/paginated2': (context) => _getScaffold(context,
-            const PaginatedDataTable2Demo(), getOptionsForRoute('/paginated2')),
-        '/asyncpaginated2': (context) => _getScaffold(
-            context,
-            const AsyncPaginatedDataTable2Demo(),
-            getOptionsForRoute('/asyncpaginated2')),
-        '/datatable': (context) => _getScaffold(context, const DataTableDemo()),
-        '/paginated': (context) =>
-            _getScaffold(context, const PaginatedDataTableDemo()),
-        '/datatable2tests': (context) =>
-            _getScaffold(context, const DataTable2Tests()),
+        '/datatable2': (context) => _getPageWithDrawer(
+          context,
+          const DataTable2Demo(),  // Reference your demo page
+          'DataTable2',
+        ),
+        '/datatable2simple': (context) => _getPageWithDrawer(
+          context,
+          const DataTable2SimpleDemo(),
+          'DataTable2 Simple',
+        ),
+        '/datatable2scrollup': (context) => _getPageWithDrawer(
+          context,
+          const DataTable2ScrollupDemo(),
+          'Scroll-up Table',
+        ),
+        '/datatable2fixedmn': (context) => _getPageWithDrawer(
+          context,
+          const DataTable2FixedNMDemo(),
+          'Fixed Rows/Cols',
+        ),
+        '/paginated2': (context) => _getPageWithDrawer(
+          context,
+          const PaginatedDataTable2Demo(),
+          'Paginated Table',
+        ),
+        '/asyncpaginated2': (context) => _getPageWithDrawer(
+          context,
+          const AsyncPaginatedDataTable2Demo(),
+          'Async Paginated Table',
+        ),
+        '/datatable': (context) => _getPageWithDrawer(
+          context,
+          const DataTableDemo(),
+          'DataTable',
+        ),
+        '/paginated': (context) => _getPageWithDrawer(
+          context,
+          const PaginatedDataTableDemo(),
+          'Paginated DataTable',
+        ),
+        '/datatable2tests': (context) => _getPageWithDrawer(
+          context,
+          const DataTable2Tests(),
+          'Unit Tests Preview',
+        ),
       },
       localizationsDelegates: const [GlobalMaterialLocalizations.delegate],
       supportedLocales: const [
@@ -172,8 +192,67 @@ class Table extends StatelessWidget {
         Locale('ru', ''),
         Locale('fr', ''),
       ],
-      // change to see how PaginatedDataTable2 controls (e.g. Rows per page) get translated
       locale: const Locale('en', ''),
     );
   }
+
+  // Helper method to get the Scaffold with Sidebar Drawer for any page
+  Scaffold _getPageWithDrawer(BuildContext context, Widget body, String title) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(title),
+        backgroundColor: Colors.grey[200],
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (route) {
+              Navigator.pushNamed(context, route);
+            },
+            itemBuilder: (BuildContext context) {
+              return <PopupMenuEntry<String>>[
+                const PopupMenuItem<String>(
+                  value: '/datatable2',
+                  child: Text('DataTable2'),
+                ),
+                const PopupMenuItem<String>(
+                  value: '/datatable2simple',
+                  child: Text('DataTable2 Simple'),
+                ),
+                const PopupMenuItem<String>(
+                  value: '/datatable2scrollup',
+                  child: Text('Scroll-up Table'),
+                ),
+                const PopupMenuItem<String>(
+                  value: '/datatable2fixedmn',
+                  child: Text('Fixed Rows/Cols'),
+                ),
+                const PopupMenuItem<String>(
+                  value: '/paginated2',
+                  child: Text('Paginated Table'),
+                ),
+                const PopupMenuItem<String>(
+                  value: '/asyncpaginated2',
+                  child: Text('Async Paginated Table'),
+                ),
+                const PopupMenuItem<String>(
+                  value: '/datatable',
+                  child: Text('DataTable'),
+                ),
+                const PopupMenuItem<String>(
+                  value: '/paginated',
+                  child: Text('Paginated DataTable'),
+                ),
+                const PopupMenuItem<String>(
+                  value: '/datatable2tests',
+                  child: Text('Unit Tests Preview'),
+                ),
+              ];
+            },
+          ),
+        ],
+      ),
+      drawer: const ExampleSidebarX(),  // Integrating your sidebar as drawer
+      body: body,
+    );
+  }
 }
+

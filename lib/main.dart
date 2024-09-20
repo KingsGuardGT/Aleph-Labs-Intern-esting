@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_project/presentation/screen/products_list_screen.dart';
 import 'package:my_project/presentation/screen/products_sidebar_screen.dart';
+import 'package:my_project/table/table.dart';
 import 'package:my_project/theme/app_theme.dart';
 
 void main() {
@@ -26,6 +27,7 @@ class MyApp extends ConsumerWidget {
       routes: {
         '/': (context) => const ProductListScreen(),
         '/screens_example': (context) => const ScreensExample(),
+        '/datatable2': (context) => const TablePage(),  // Add the Table page route
       },
     );
   }
