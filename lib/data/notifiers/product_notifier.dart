@@ -36,13 +36,13 @@ class ProductNotifier {
       // Check if it's the last page (i.e., fewer products than the page size)
       final isLastPage = newProducts.length < _pageSize;
       if (isLastPage) {
-        pagingController.appendLastPage(newProducts);  // Last page reached
+        pagingController.appendLastPage(newProducts); // Last page reached
       } else {
         final nextPageKey = pageKey + 1;
-        pagingController.appendPage(newProducts, nextPageKey);  // Fetch next page
+        pagingController.appendPage(newProducts, nextPageKey); // Fetch next page
       }
     } catch (error) {
-      pagingController.error = error;  // Set error state if fetching fails
+      pagingController.error = error; // Set error state if fetching fails
     }
   }
 
