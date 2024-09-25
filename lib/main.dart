@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_project/presentation/screen/products_list_screen.dart';
 import 'package:my_project/presentation/screen/products_sidebar_screen.dart';
 import 'package:my_project/table/screens/data_table2_fixed_nm.dart';
+import 'package:my_project/table/screens/paginated_data_table.dart';
 import 'package:my_project/table/table.dart';
 import 'package:my_project/theme/app_theme.dart';
 
@@ -29,7 +30,8 @@ class MyApp extends ConsumerWidget {
         '/': (context) => const ProductListScreen(),
         '/screens_example': (context) => const ScreensExample(),
         '/datatable2': (context) => const TablePage(),
-        '/datatable2fixedmn': (context) => const DataTable2FixedNMDemo()// Add the Table page route
+        '/datatable2fixedmn': (context) => const DataTable2FixedNMDemo(),
+        '/paginated': (context) => const PaginatedDataTableDemo(),// Add the Table page route
       },
     );
   }

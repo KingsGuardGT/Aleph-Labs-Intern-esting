@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:data_table_2/data_table_2.dart';
@@ -24,21 +25,21 @@ class DataTable2DemoState extends ConsumerState<DataTable2FixedNMDemo> {
       int columnIndex,
       bool ascending,
       ) {
-    final products = ref.read(productNotifierProvider).pagingController.itemList;
-    if (products != null) {
-      products.sort((a, b) {
-        final aValue = getField(a);
-        final bValue = getField(b);
-        return ascending ? Comparable.compare(aValue, bValue) : Comparable.compare(bValue, aValue);
-      });
+    final productNotifier = ref.read(productNotifierProvider);
+    final products = List<Product>.from(productNotifier.pagingController.itemList ?? []);
 
-      setState(() {
-        _sortColumnIndex = columnIndex;
-        _sortAscending = ascending;
-      });
+    products.sort((a, b) {
+      final aValue = getField(a);
+      final bValue = getField(b);
+      return ascending ? Comparable.compare(aValue, bValue) : Comparable.compare(bValue, aValue);
+    });
 
-      ref.read(productNotifierProvider);
-    }
+    setState(() {
+      _sortColumnIndex = columnIndex;
+      _sortAscending = ascending;
+    });
+
+    productNotifier.updateSortedProducts(products);
   }
 
   void _showFullScreenImage(String imageUrl) {
@@ -69,29 +70,28 @@ class DataTable2DemoState extends ConsumerState<DataTable2FixedNMDemo> {
     final productNotifier = ref.watch(productNotifierProvider);
     final products = productNotifier.pagingController.itemList;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isWeb = constraints.maxWidth > 600;
+    return Scaffold(
+        appBar: AppBar(
+        title: const Text('Product Table'),
+    ),
+                  body: LayoutBuilder(
+                  builder: (context, constraints) {
+                  final isWeb = constraints.maxWidth > 600;
 
-        return Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (isWeb) _buildWebSliders() else _buildMobileSliders(),
-              const SizedBox(height: 16),
-              const Text(
-                'Product Table',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: Theme(
+                  return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                  if (isWeb) _buildWebSliders() else _buildMobileSliders(),
+                  const SizedBox(height: 16),
+                  Expanded(
+                  child: Theme(
                   data: ThemeData(
-                    iconTheme: const IconThemeData(color: Colors.white),
-                    scrollbarTheme: ScrollbarThemeData(
-                      thickness: WidgetStateProperty.all(5),
-                    ),
+                  iconTheme: const IconThemeData(color: Colors.white),
+                  scrollbarTheme: ScrollbarThemeData(
+                  thickness: WidgetStateProperty.all(5),
+                  ),
                   ),
                   child: DataTable2(
                     headingRowColor: WidgetStateProperty.resolveWith((states) => Colors.grey[850]!),
@@ -100,7 +100,7 @@ class DataTable2DemoState extends ConsumerState<DataTable2FixedNMDemo> {
                     isHorizontalScrollBarVisible: true,
                     isVerticalScrollBarVisible: true,
                     columnSpacing: isWeb ? 12 : 8,
-                    horizontalMargin: isWeb ? 12 :  8,
+                    horizontalMargin: isWeb ? 12 : 8,
                     sortAscending: _sortAscending,
                     sortColumnIndex: _sortColumnIndex,
                     sortArrowIcon: Icons.keyboard_arrow_up,
@@ -164,15 +164,26 @@ class DataTable2DemoState extends ConsumerState<DataTable2FixedNMDemo> {
                           DataCell(Text('\$${product.price}')),
                           DataCell(
                             GestureDetector(
-                              onTap: () => _showFullScreenImage(product.images!.first),
+                              onTap: () {
+                                try {
+                                  _showFullScreenImage(product.images!.first);
+                                } catch (e) {
+                                  if (kDebugMode) {
+                                    print('Error loading image: $e');
+                                  }
+                                }
+                              },
                               child: Image.network(
                                 product.images!.first,
                                 width: 50,
                                 height: 50,
                                 fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return const Text('Error loading image');
+                                },
                               ),
                             ),
-                          ),
+                          )
                         ],
                       );
                     }).toList()
@@ -191,9 +202,8 @@ class DataTable2DemoState extends ConsumerState<DataTable2FixedNMDemo> {
           ),
         );
       },
-    );
+    ));
   }
-
   Widget _buildWebSliders() {
     return Row(
       children: [
