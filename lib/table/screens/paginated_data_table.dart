@@ -77,6 +77,9 @@ class PaginatedDataTableDemoState extends ConsumerState<PaginatedDataTableDemo> 
       body: LayoutBuilder(
         builder: (context, constraints) {
           final isTablet = constraints.maxWidth > 600;
+          final isWideScreen = constraints.maxWidth > 800;
+          final availableWidth = constraints.maxWidth;
+
           return Padding(
             padding: EdgeInsets.all(isTablet ? 16 : 8),
             child: Column(
@@ -91,64 +94,69 @@ class PaginatedDataTableDemoState extends ConsumerState<PaginatedDataTableDemo> 
                   ),
                 Expanded(
                   child: SingleChildScrollView(
-                    child: PaginatedDataTable(
-                      header: Text(
-                        'Product Table',
-                        style: TextStyle(fontSize: isTablet ? 18 : 14),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: availableWidth,
                       ),
-                      rowsPerPage: _rowsPerPage.value,
-                      onRowsPerPageChanged: (value) {
-                        setState(() {
-                          _rowsPerPage.value = value!;
-                        });
-                      },
-                      availableRowsPerPage: const [5, 10, 20],
-                      initialFirstRowIndex: _rowIndex.value,
-                      onPageChanged: (rowIndex) {
-                        setState(() {
-                          _rowIndex.value = rowIndex;
-                        });
-                      },
-                      sortColumnIndex: _sortColumnIndex.value,
-                      sortAscending: _sortAscending.value,
-                      onSelectAll: _productDataSource.selectAll,
-                      columns: [
-                        DataColumn(
-                          label: Text(
-                            'ID',
-                            style: TextStyle(fontSize: isTablet ? 16 : 12),
-                          ),
-                          onSort: (columnIndex, ascending) {
-                            _sort<num>((product) => product.id, columnIndex, ascending);
-                          },
+                      child: PaginatedDataTable(
+                        header: Text(
+                          'Product Table',
+                          style: TextStyle(fontSize: isTablet ? 18 : 14),
                         ),
-                        DataColumn(
-                          label: Text(
-                            'Title',
-                            style: TextStyle(fontSize: isTablet ? 16 : 12),
+                        rowsPerPage: _rowsPerPage.value,
+                        onRowsPerPageChanged: (value) {
+                          setState(() {
+                            _rowsPerPage.value = value!;
+                          });
+                        },
+                        availableRowsPerPage: const [5, 10, 20],
+                        initialFirstRowIndex: _rowIndex.value,
+                        onPageChanged: (rowIndex) {
+                          setState(() {
+                            _rowIndex.value = rowIndex;
+                          });
+                        },
+                        sortColumnIndex: _sortColumnIndex.value,
+                        sortAscending: _sortAscending.value,
+                        onSelectAll: _productDataSource.selectAll,
+                        columns: [
+                          DataColumn(
+                            label: Text(
+                              'ID',
+                              style: TextStyle(fontSize: isTablet ? 16 : 12),
+                            ),
+                            onSort: (columnIndex, ascending) {
+                              _sort<num>((product) => product.id, columnIndex, ascending);
+                            },
                           ),
-                          onSort: (columnIndex, ascending) {
-                            _sort<String>((product) => product.title, columnIndex, ascending);
-                          },
-                        ),
-                        DataColumn(
-                          label: Text(
-                            'Price',
-                            style: TextStyle(fontSize: isTablet ? 16 : 12),
+                          DataColumn(
+                            label: Text(
+                              'Title',
+                              style: TextStyle(fontSize: isTablet ? 16 : 12),
+                            ),
+                            onSort: (columnIndex, ascending) {
+                              _sort<String>((product) => product.title, columnIndex, ascending);
+                            },
                           ),
-                          numeric: true,
-                          onSort: (columnIndex, ascending) {
-                            _sort<num>((product) => product.price, columnIndex, ascending);
-                          },
-                        ),
-                        DataColumn(
-                          label: Text(
-                            'Image',
-                            style: TextStyle(fontSize: isTablet ? 16 : 12),
+                          DataColumn(
+                            label: Text(
+                              'Price',
+                              style: TextStyle(fontSize: isTablet ? 16 : 12),
+                            ),
+                            numeric: true,
+                            onSort: (columnIndex, ascending) {
+                              _sort<num>((product) => product.price, columnIndex, ascending);
+                            },
                           ),
-                        ),
-                      ],
-                      source: _productDataSource,
+                          DataColumn(
+                            label: Text(
+                              'Image',
+                              style: TextStyle(fontSize: isTablet ? 16 : 12),
+                            ),
+                          ),
+                        ],
+                        source: _productDataSource,
+                      ),
                     ),
                   ),
                 ),
@@ -157,7 +165,7 @@ class PaginatedDataTableDemoState extends ConsumerState<PaginatedDataTableDemo> 
                   child: ElevatedButton(
                     onPressed: () => productNotifier.refreshProducts(),
                     style: ElevatedButton.styleFrom(
-                      minimumSize: Size(isTablet ? 120 : 80, 40),
+                      minimumSize: Size(isWideScreen ? 120 : 80, 40),
                     ),
                     child: const Text('Refresh'),
                   ),
