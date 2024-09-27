@@ -39,27 +39,31 @@ class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
     productNotifier.updateSortedProducts(products);
   }
 
-  void _showFullScreenImage(String imageUrl) {
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => Scaffold(
-        appBar: AppBar(
+  void _showFullScreenImage(String? imageUrl) {
+    if (imageUrl != null) {
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) => Scaffold(
+          appBar: AppBar(
+            backgroundColor: Colors.black,
+            leading: IconButton(
+              icon: const Icon(Icons.close, color: Colors.white),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ),
+          body: Center(
+            child: InteractiveViewer(
+              boundaryMargin: const EdgeInsets.all(20),
+              minScale: 0.5,
+              maxScale: 4,
+              child: Image.network(imageUrl, errorBuilder: (context, error, stackTrace) {
+                return const Text('Error loading image');
+              }),
+            ),
+          ),
           backgroundColor: Colors.black,
-          leading: IconButton(
-            icon: const Icon(Icons.close, color: Colors.white),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
         ),
-        body: Center(
-          child: InteractiveViewer(
-            boundaryMargin: const EdgeInsets.all(20),
-            minScale: 0.5,
-            maxScale: 4,
-            child: Image.network(imageUrl),
-          ),
-        ),
-        backgroundColor: Colors.black,
-      ),
-    ));
+      ));
+    }
   }
 
   @override
@@ -142,7 +146,7 @@ class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
                       DataCell(
                         Checkbox(
                           value: _selectedRows.contains(product.id),
-                          onChanged: (value) {
+                          onChanged: ( value) {
                             setState(() {
                               if (value!) {
                                 _selectedRows.add(product.id);
@@ -158,13 +162,18 @@ class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
                       DataCell(Text('\$${product.price}')),
                       DataCell(
                         GestureDetector(
-                          onTap: () => _showFullScreenImage(product.images!.first),
-                          child: Image.network(
+                          onTap: () => _showFullScreenImage(product.images?.first),
+                          child: product.images != null && product.images!.isNotEmpty
+                              ? Image.network(
                             product.images!.first,
                             width: 50,
                             height: 50,
                             fit: BoxFit.cover,
-                          ),
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Text('Error loading image');
+                            },
+                          )
+                              : const Text('No image'),
                         ),
                       ),
                     ],

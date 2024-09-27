@@ -15,18 +15,14 @@ class ProductListExpandedItem extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Created At: ${product.creationAt ?? 'Not available'}'),
-          const SizedBox(height: 16),
-          Text('Updated At: ${product.updatedAt ?? 'Not available'}'),
-          const SizedBox(height: 16),
-          if (product.images != null)
+
             Column(
               children: product.images!.map((image) {
                 String imageUrl = image.replaceAll('[', '').replaceAll(']', '').replaceAll('"', '');
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Image.network(
-                    imageUrl,
+                    'https://picsum.photos/250?image=9',
                     errorBuilder: (context, error, stackTrace) {
                       return const Text('Failed to load image');
                     },
