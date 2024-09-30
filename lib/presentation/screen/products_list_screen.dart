@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/notifiers/product_notifier.dart';
 import '../../data/notifiers/sidebar_controller_provider.dart';
+import '../../main.dart';
 import '../widgets/products_list_body.dart';
 import '../widgets/products_sidebar.dart';  // Import the ExampleSidebarX widget
 
@@ -23,6 +24,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final theme = ref.watch(themeProvider);  // Watch the theme provider
 
     return Scaffold(
       appBar: AppBar(

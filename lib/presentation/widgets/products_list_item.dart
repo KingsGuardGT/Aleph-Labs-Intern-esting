@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_project/data/models/product.dart';
 import 'package:my_project/presentation/widgets/products_list_expanded_item.dart';
 
+import '../../main.dart';
+
 // StateProvider for managing individual product expansion state based on index
 final isExpandedProvider = StateProvider.family<bool, int>((ref, index) => false);
 
@@ -20,6 +22,7 @@ class ProductListItem extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Get the current expansion state for the specific product
     final isExpanded = ref.watch(isExpandedProvider(index));
+    final theme = ref.watch(themeProvider);  // Watch the theme provider
 
     // Determine screen width to change layout based on the size
     final screenWidth = MediaQuery.of(context).size.width;
@@ -59,14 +62,14 @@ class ProductListItem extends ConsumerWidget {
           // Title of the product
           Text(
             product.title,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleLarge,  // Apply themed text style
           ),
           const SizedBox(height: 8),
 
           // Price of the product
           Text(
             '\$${product.price.toStringAsFixed(2)}',
-            style: const TextStyle(fontSize: 18, color: Colors.green),
+            style: theme.textTheme.titleMedium?.copyWith(color: Colors.green),  // Apply themed text style
           ),
           const SizedBox(height: 8),
 
@@ -77,6 +80,7 @@ class ProductListItem extends ConsumerWidget {
                 : (product.description != null && product.description!.length > 50
                 ? '${product.description!.substring(0, 50)}...' // Shortened description
                 : product.description ?? ''), // Fallback for short description
+            style: theme.textTheme.bodyMedium,  // Apply themed text style
           ),
           const SizedBox(height: 8),
 
@@ -100,34 +104,37 @@ class ProductListItem extends ConsumerWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Card(
-        elevation: 4,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: isLargeScreen
-              ? Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              buildImage(),
-              const SizedBox(width: 20),
-              // Ensure content does not overflow by wrapping it with Expanded
-              Expanded(
-                child: SingleChildScrollView(
+      child: Theme(
+        data: theme,  // Apply the theme here
+        child: Card(
+          elevation: 4,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: isLargeScreen
+                ? Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                buildImage(),
+                const SizedBox(width: 20),
+                // Ensure content does not overflow by wrapping it with Expanded
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: buildContent(),
+                  ),
+                ),
+              ],
+            )
+                : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                buildImage(),
+                const SizedBox(height: 16),
+                // Wrap in SingleChildScrollView to prevent overflow in small screens
+                SingleChildScrollView(
                   child: buildContent(),
                 ),
-              ),
-            ],
-          )
-              : Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              buildImage(),
-              const SizedBox(height: 16),
-              // Wrap in SingleChildScrollView to prevent overflow in small screens
-              SingleChildScrollView(
-                child: buildContent(),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

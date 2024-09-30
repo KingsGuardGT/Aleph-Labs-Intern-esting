@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_project/data/models/product.dart';
 
+import '../../main.dart';
+
 class ProductListExpandedItem extends ConsumerWidget {
   final Product product;
 
@@ -9,13 +11,16 @@ class ProductListExpandedItem extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      color: Colors.grey[200],
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    final theme = ref.watch(themeProvider);  // Watch the theme provider
 
+    return Theme(
+      data: theme,  // Apply the theme here
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        color: theme.colorScheme.surface,  // Use themed color
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Column(
               children: product.images!.map((image) {
                 String imageUrl = image.replaceAll('[', '').replaceAll(']', '').replaceAll('"', '');
@@ -33,7 +38,8 @@ class ProductListExpandedItem extends ConsumerWidget {
                 );
               }).toList(),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }
