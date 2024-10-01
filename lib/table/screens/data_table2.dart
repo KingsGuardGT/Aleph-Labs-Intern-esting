@@ -17,6 +17,8 @@ class DataTable2Demo extends ConsumerStatefulWidget {
 class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
   bool _sortAscending = true;
   int? _sortColumnIndex;
+  String _searchQuery = '';
+  Set<int> _selectedRows = {};
 
   void _sort<T>(
       Comparable<T> Function(Product p) getField,
@@ -39,6 +41,7 @@ class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
 
     productNotifier.updateSortedProducts(products);
   }
+
 
   void _showFullScreenImage(String? imageUrl) {
     if (imageUrl != null) {
@@ -72,6 +75,13 @@ class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
       );
     }
   }
+  List<Product> _getFilteredProducts(List<Product>? products) {
+    if (_searchQuery.isEmpty) return products ?? [];
+    return products?.where((product) =>
+    product.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+        product.description!.toLowerCase().contains(_searchQuery.toLowerCase())
+    ).toList() ?? [];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,12 +91,26 @@ class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
         ? productNotifier.sortedProducts
         : productNotifier.pagingController.itemList;
 
+    final filteredProducts = _getFilteredProducts(products);
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
+          TextField(
+            decoration: const InputDecoration(
+              labelText: 'Search',
+              prefixIcon: Icon(Icons.search),
+              border: OutlineInputBorder(),
+            ),
+            onChanged: (value) {
+              setState(() {
+                _searchQuery = value;
+              });
+            },
+          ),
+          const SizedBox(height: 16),
           if (productNotifier.errorMessage.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(bottom: 16),
@@ -97,8 +121,8 @@ class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
             ),
           Expanded(
             child: screenWidth > 600
-                ? _buildDataTable(products, theme)
-                : _buildListView(products, theme),
+                ? _buildDataTable(filteredProducts, theme)
+                : _buildListView(filteredProducts, theme),
           ),
           ElevatedButton(
             onPressed: () => productNotifier.refreshProducts(),
@@ -181,8 +205,20 @@ class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
           ),
         ],
         rows: products != null
-            ? products.map((product) {
+            ? products.asMap().entries.map((entry) {
+          final product = entry.value;
+          final isSelected = _selectedRows.contains(entry.key);
           return DataRow2(
+            onSelectChanged: (isSelected) {
+              setState(() {
+                if (isSelected ?? false) {
+                  _selectedRows.add(entry.key);
+                } else {
+                  _selectedRows.remove(entry.key);
+                }
+              });
+            },
+            selected: isSelected,
             cells: [
               DataCell(Center(child: Text(product.id.toString(), style: theme.textTheme.bodyMedium))),
               DataCell(Text(product.title, style: theme.textTheme.bodyMedium)),
