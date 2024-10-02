@@ -33,6 +33,9 @@ dependencies:
   flutter:
     sdk: flutter
   dio_cache_interceptor_hive_store: ^3.2.2
+  cached_network_image: ^3.4.1
+  flutter_cache_manager: ^3.4.1
+  shared_preferences: ^2.3.2
   hive: ^2.2.3
   intl: ^0.19.0
 

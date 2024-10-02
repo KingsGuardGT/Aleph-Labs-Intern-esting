@@ -68,6 +68,10 @@ class ExampleSidebarX extends ConsumerWidget {
           icon: Icons.home,
           label: 'Home',
           onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ProductListScreen()),
+            );
             // Handle Home Navigation (Optional)
           },
         ),

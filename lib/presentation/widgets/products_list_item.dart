@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:my_project/data/models/product.dart';
-import 'package:my_project/presentation/widgets/products_list_expanded_item.dart';
+import 'package:cached_network_image/cached_network_image.dart';  // Use CachedNetworkImage
 
 import '../../main.dart';
+import '../../data/models/product.dart';
+import '../../presentation/widgets/products_list_expanded_item.dart';
 
 // StateProvider for managing individual product expansion state based on index
 final isExpandedProvider = StateProvider.family<bool, int>((ref, index) => false);
@@ -20,79 +21,66 @@ class ProductListItem extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Get the current expansion state for the specific product
-    final isExpanded = ref.watch(isExpandedProvider(index));
+    // Use `select` to watch only the necessary state (expansion state for this index)
+    final isExpanded = ref.watch(isExpandedProvider(index).select((state) => state));
     final theme = ref.watch(themeProvider);  // Watch the theme provider
 
-    // Determine screen width to change layout based on the size
     final screenWidth = MediaQuery.of(context).size.width;
-    final isLargeScreen = screenWidth > 600; // For tablet or web-sized screens
+    final isLargeScreen = screenWidth > 600;
 
-    // Ensure that we are using a valid URL for the image (null and array handling)
+    // Handle image URL more effectively
     final String? imageUrl = (product.images != null && product.images!.isNotEmpty)
-        ? product.images!.first.replaceAll(RegExp(r'[\[\]\"]'), '') // Remove brackets and quotes
-        : null; // Fallback if no image exists
+        ? product.images!.first.replaceAll(RegExp(r'[\[\]\"]'), '')  // Ensure the URL is clean
+        : null;
 
     Widget buildImage() {
-      if (imageUrl != null && imageUrl.isNotEmpty) {
-        return Container(
-          width: isLargeScreen ? 150 : double.infinity,
-          height: isLargeScreen ? 150 : 200,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            image: DecorationImage(
-              image: NetworkImage(imageUrl),
-              fit: BoxFit.cover,
-            ),
-          ),
-        );
-      } else {
-        return SizedBox(
-          width: isLargeScreen ? 150 : double.infinity,
-          height: isLargeScreen ? 150 : 200,
-          child: const Icon(Icons.image_not_supported),
-        );
-      }
+      return imageUrl != null && imageUrl.isNotEmpty
+          ? CachedNetworkImage(
+        imageUrl: imageUrl,
+        width: isLargeScreen ? 150 : double.infinity,
+        height: isLargeScreen ? 150 : 200,
+        fit: BoxFit.cover,
+        placeholder: (context, url) => const Center(
+          child: CircularProgressIndicator(),  // Show a loading spinner while loading the image
+        ),
+        errorWidget: (context, url, error) => const Icon(Icons.error),  // Error icon when image fails to load
+      )
+          : SizedBox(
+        width: isLargeScreen ? 150 : double.infinity,
+        height: isLargeScreen ? 150 : 200,
+        child: const Icon(Icons.image_not_supported),
+      );
     }
 
     Widget buildContent() {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Title of the product
           Text(
             product.title,
-            style: theme.textTheme.titleLarge,  // Apply themed text style
+            style: theme.textTheme.titleLarge,
           ),
           const SizedBox(height: 8),
-
-          // Price of the product
           Text(
             '\$${product.price.toStringAsFixed(2)}',
-            style: theme.textTheme.titleMedium?.copyWith(color: Colors.green),  // Apply themed text style
+            style: theme.textTheme.titleMedium?.copyWith(color: Colors.green),
           ),
           const SizedBox(height: 8),
-
-          // Description, shortened or expanded based on isExpanded
           Text(
             isExpanded
-                ? product.description ?? '' // Full description
+                ? product.description ?? ''
                 : (product.description != null && product.description!.length > 50
-                ? '${product.description!.substring(0, 50)}...' // Shortened description
-                : product.description ?? ''), // Fallback for short description
-            style: theme.textTheme.bodyMedium,  // Apply themed text style
+                ? '${product.description!.substring(0, 50)}...'
+                : product.description ?? ''),
+            style: theme.textTheme.bodyMedium,
           ),
           const SizedBox(height: 8),
-
-          // Expand/Collapse Button
           IconButton(
             icon: Icon(isExpanded ? Icons.expand_less : Icons.expand_more),
             onPressed: () {
               ref.read(isExpandedProvider(index).notifier).update((state) => !state);
             },
           ),
-
-          // Conditionally render extra content if expanded
           if (isExpanded)
             Padding(
               padding: const EdgeInsets.only(top: 8.0),
@@ -105,7 +93,7 @@ class ProductListItem extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Theme(
-        data: theme,  // Apply the theme here
+        data: theme,
         child: Card(
           elevation: 4,
           child: Padding(
@@ -116,11 +104,8 @@ class ProductListItem extends ConsumerWidget {
               children: [
                 buildImage(),
                 const SizedBox(width: 20),
-                // Ensure content does not overflow by wrapping it with Expanded
                 Expanded(
-                  child: SingleChildScrollView(
-                    child: buildContent(),
-                  ),
+                  child: buildContent(),
                 ),
               ],
             )
@@ -129,10 +114,7 @@ class ProductListItem extends ConsumerWidget {
               children: [
                 buildImage(),
                 const SizedBox(height: 16),
-                // Wrap in SingleChildScrollView to prevent overflow in small screens
-                SingleChildScrollView(
-                  child: buildContent(),
-                ),
+                buildContent(),
               ],
             ),
           ),

@@ -1,8 +1,12 @@
+import 'dart:convert';
+
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:intl/intl.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/models/product.dart';
 import '../../data/notifiers/product_notifier.dart';
 import '../../main.dart';
@@ -19,27 +23,106 @@ class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
   int? _sortColumnIndex;
   String _searchQuery = '';
   Set<int> _selectedRows = {};
+  List<Product> _displayedProducts = [];
+  int _currentPage = 1;
+  final int _itemsPerPage = 20;
+  bool _isLoading = false;
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialData();
+    _scrollController.addListener(_scrollListener);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_scrollListener);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollListener() {
+    if (_scrollController.offset >= _scrollController.position.maxScrollExtent &&
+        !_scrollController.position.outOfRange) {
+      _loadMoreData();
+    }
+  }
+
+  Future<void> _loadInitialData() async {
+    setState(() {
+      _isLoading = true;
+    });
+    final cachedProducts = await _getCachedData(_currentPage, _itemsPerPage);
+    if (cachedProducts.isNotEmpty) {
+      setState(() {
+        _displayedProducts = cachedProducts;
+        _isLoading = false;
+      });
+    } else {
+      await _fetchAndCacheData();
+    }
+  }
+
+  Future<void> _loadMoreData() async {
+    if (!_isLoading) {
+      setState(() {
+        _isLoading = true;
+        _currentPage++;
+      });
+      await _fetchAndCacheData();
+    }
+  }
+
+  Future<void> _fetchAndCacheData() async {
+    final productNotifier = ref.read(productNotifierProvider);
+    final newProducts = await productNotifier.fetchProducts(_currentPage, _itemsPerPage);
+    await _cacheData(newProducts, _currentPage);
+    setState(() {
+      _displayedProducts.addAll(newProducts);
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _cacheData(List<Product> products, int page) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final jsonString = await compute(_encodeProducts, products);
+    await prefs.setString('cached_products_page_$page', jsonString);
+  }
+
+  static String _encodeProducts(List<Product> products) {
+    return jsonEncode(products.map((product) => product.toJson()).toList());
+  }
+
+  Future<List<Product>> _getCachedData(int page, int itemsPerPage) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final jsonString = prefs.getString('cached_products_page_$page');
+    if (jsonString != null) {
+      final List<dynamic> jsonData = await compute(_decodeJson, jsonString);
+      return jsonData.map((json) => Product.fromJson(json)).toList();
+    }
+    return [];
+  }
+
+  static List<dynamic> _decodeJson(String jsonString) {
+    return jsonDecode(jsonString);
+  }
 
   void _sort<T>(
       Comparable<T> Function(Product p) getField,
       int columnIndex,
       bool ascending,
       ) {
-    final productNotifier = ref.read(productNotifierProvider);
-    final products = List<Product>.from(productNotifier.pagingController.itemList ?? []);
-
-    products.sort((a, b) {
-      final aValue = getField(a);
-      final bValue = getField(b);
-      return ascending ? Comparable.compare(aValue, bValue) : Comparable.compare(bValue, aValue);
-    });
-
     setState(() {
       _sortColumnIndex = columnIndex;
       _sortAscending = ascending;
+      _displayedProducts.sort((a, b) {
+        final aValue = getField(a);
+        final bValue = getField(b);
+        return ascending ? Comparable.compare(aValue, bValue) : Comparable.compare(bValue, aValue);
+      });
     });
-
-    productNotifier.updateSortedProducts(products);
   }
 
 
@@ -61,9 +144,9 @@ class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
                 boundaryMargin: const EdgeInsets.all(20),
                 minScale: 0.5,
                 maxScale: 4,
-                child: Image.network(
-                  imageUrl,
-                  errorBuilder: (context, error, stackTrace) {
+                child: CachedNetworkImage(
+                  imageUrl: imageUrl,
+                  errorWidget: (context, error, stackTrace) {
                     return Text('Error loading image', style: theme.textTheme.bodyMedium);
                   },
                 ),
@@ -75,21 +158,20 @@ class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
       );
     }
   }
-  List<Product> _getFilteredProducts(List<Product>? products) {
-    if (_searchQuery.isEmpty) return products ?? [];
-    return products?.where((product) =>
+
+  List<Product> _getFilteredProducts(List<Product> products) {
+    if (_searchQuery.isEmpty) return products;
+    return products.where((product) =>
     product.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-        product.description!.toLowerCase().contains(_searchQuery.toLowerCase())
-    ).toList() ?? [];
+        (product.description != null && product.description!.toLowerCase().contains(_searchQuery.toLowerCase()))
+    ).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = ref.watch(themeProvider);
     final productNotifier = ref.watch(productNotifierProvider);
-    final products = productNotifier.sortedProducts.isNotEmpty
-        ? productNotifier.sortedProducts
-        : productNotifier.pagingController.itemList;
+    final products = productNotifier.pagingController.itemList ?? [];
 
     final filteredProducts = _getFilteredProducts(products);
     final screenWidth = MediaQuery.of(context).size.width;
@@ -108,24 +190,25 @@ class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
               setState(() {
                 _searchQuery = value;
               });
+              productNotifier.pagingController.refresh(); // Refresh the paging controller on search
             },
           ),
           const SizedBox(height: 16),
-          if (productNotifier.errorMessage.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Text(
-                productNotifier.errorMessage,
-                style: TextStyle(color: theme.colorScheme.error),
-              ),
-            ),
           Expanded(
             child: screenWidth > 600
                 ? _buildDataTable(filteredProducts, theme)
                 : _buildListView(filteredProducts, theme),
           ),
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: CircularProgressIndicator(),
+            ),
           ElevatedButton(
-            onPressed: () => productNotifier.refreshProducts(),
+            onPressed: () async {
+              productNotifier.clearCache();
+              productNotifier.pagingController.refresh(); // Re-fetch the data and clear cache
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: theme.colorScheme.primary,
               foregroundColor: theme.colorScheme.onPrimary,
@@ -137,7 +220,7 @@ class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
     );
   }
 
-  Widget _buildDataTable(List<Product>? products, ThemeData theme) {
+  Widget _buildDataTable(List<Product> products, ThemeData theme) {
     return Theme(
       data: theme.copyWith(
         iconTheme: theme.iconTheme.copyWith(color: theme.colorScheme.onPrimary),
@@ -146,6 +229,7 @@ class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
         ),
       ),
       child: DataTable2(
+        scrollController: _scrollController,
         headingRowColor: WidgetStatePropertyAll(theme.colorScheme.primary),
         headingTextStyle: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onPrimary),
         checkboxHorizontalMargin: 12,
@@ -204,8 +288,7 @@ class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
             fixedWidth: 200,
           ),
         ],
-        rows: products != null
-            ? products.asMap().entries.map((entry) {
+        rows: products.asMap().entries.map((entry) {
           final product = entry.value;
           final isSelected = _selectedRows.contains(entry.key);
           return DataRow2(
@@ -245,11 +328,9 @@ class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
                 product.images != null && product.images!.isNotEmpty
                     ? GestureDetector(
                   onTap: () => _showFullScreenImage(product.images!.first),
-                  child: Image.network(
-                    product.images!.first,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Text('Error loading image', style: theme.textTheme.bodyMedium);
-                    },
+                  child: CachedNetworkImage(
+                    imageUrl: product.images!.first,
+                    errorWidget: (context, url, error) => Text('Error loading image', style: theme.textTheme.bodyMedium),
                     width: 80,
                     height: 80,
                     fit: BoxFit.cover,
@@ -259,8 +340,7 @@ class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
               ),
             ],
           );
-        }).toList()
-            : [],
+        }).toList(),
         empty: Center(
           child: Container(
             padding: const EdgeInsets.all(20),
@@ -272,13 +352,17 @@ class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
     );
   }
 
-  Widget _buildListView(List<Product>? products, ThemeData theme) {
+  Widget _buildListView(List<Product> products, ThemeData theme) {
     return Theme(
       data: theme,
       child: ListView.builder(
-        itemCount: products?.length ?? 0,
+        controller: _scrollController,
+        itemCount: products.length + 1, // +1 for the loading indicator
         itemBuilder: (context, index) {
-          final product = products![index];
+          if (index == products.length) {
+            return _isLoading ? const Center(child: CircularProgressIndicator()) : const SizedBox.shrink();
+          }
+          final product = products[index];
           return Theme(
             data: theme,
             child: ExpansionTile(
@@ -304,9 +388,9 @@ class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
                 if (product.images != null && product.images!.isNotEmpty)
                   GestureDetector(
                     onTap: () => _showFullScreenImage(product.images!.first),
-                    child : Image.network(
-                      product.images!.first,
-                      errorBuilder: (context, error, stackTrace) {
+                    child: CachedNetworkImage(
+                      imageUrl: product.images!.first,
+                      errorWidget: (context, error, stackTrace) {
                         return Text('Error loading image', style: theme.textTheme.bodyMedium);
                       },
                       width: 100,

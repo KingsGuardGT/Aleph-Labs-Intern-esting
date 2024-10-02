@@ -12,50 +12,43 @@ class ProductListBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final productNotifier = ref.watch(productNotifierProvider);
-    final pagingController = productNotifier.pagingController;
-    final theme = ref.watch(themeProvider);
+    final pagingController = ref.read(productNotifierProvider).pagingController; // Use read instead of watch to avoid unnecessary rebuilds
+    final theme = ref.watch(themeProvider); // Only theme needs to be watched
 
-    // Use MediaQuery to determine screen width
     final screenWidth = MediaQuery.of(context).size.width;
-
-    // Define breakpoint for switching to grid (e.g., 600px for web/tablets)
     final isLargeScreen = screenWidth > 600;
 
     return RefreshIndicator(
-      onRefresh: () => Future.sync(() => pagingController.refresh()),  // Refresh the entire list
+      onRefresh: () => Future.sync(() => pagingController.refresh()),
       child: Theme(
-        data: theme,  // Apply the theme here
+        data: theme,
         child: isLargeScreen
-            ? LayoutBuilder(  // LayoutBuilder to manage constraints better
+            ? LayoutBuilder(
           builder: (context, constraints) {
             return PagedGridView<int, Product>(
               pagingController: pagingController,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,  // Make it a 3-column grid
+                crossAxisCount: 3,
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
-                childAspectRatio: 1 / 1.5,  // Control height/width ratio for grid items
+                childAspectRatio: 1 / 1.5,
               ),
               builderDelegate: PagedChildBuilderDelegate<Product>(
                 animateTransitions: true,
                 itemBuilder: (context, product, index) {
-                  return ProductListItem(
-                    product: product,
-                    index: index,
-                  );
+                  return ProductListItem(product: product, index: index);
                 },
                 firstPageProgressIndicatorBuilder: (_) => const Center(
-                  child: CircularProgressIndicator(),  // Loading indicator for the first page
+                  child: CircularProgressIndicator(),
                 ),
                 newPageProgressIndicatorBuilder: (_) => const Center(
-                  child: CircularProgressIndicator(),  // Loading indicator for additional pages
+                  child: CircularProgressIndicator(),
                 ),
                 firstPageErrorIndicatorBuilder: (context) => const Center(
-                  child: Text("Error loading products."),  // Error state for the first page
+                  child: Text("Error loading products."),
                 ),
                 noItemsFoundIndicatorBuilder: (context) => const Center(
-                  child: Text("No products available."),  // Empty state if no items are found
+                  child: Text("No products available."),
                 ),
               ),
             );
@@ -66,22 +59,19 @@ class ProductListBody extends ConsumerWidget {
           builderDelegate: PagedChildBuilderDelegate<Product>(
             animateTransitions: true,
             itemBuilder: (context, product, index) {
-              return ProductListItem(
-                product: product,
-                index: index,
-              );
+              return ProductListItem(product: product, index: index);
             },
             firstPageProgressIndicatorBuilder: (_) => const Center(
-              child: CircularProgressIndicator(),  // Loading indicator for the first page
+              child: CircularProgressIndicator(),
             ),
             newPageProgressIndicatorBuilder: (_) => const Center(
-              child: CircularProgressIndicator(),  // Loading indicator for additional pages
+              child: CircularProgressIndicator(),
             ),
             firstPageErrorIndicatorBuilder: (context) => const Center(
-              child: Text("Error loading products."),  // Error state for the first page
+              child: Text("Error loading products."),
             ),
             noItemsFoundIndicatorBuilder: (context) => const Center(
-              child: Text("No products available."),  // Empty state if no items are found
+              child: Text("No products available."),
             ),
           ),
         ),
