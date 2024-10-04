@@ -1,6 +1,8 @@
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:my_project/table/screens/data_table2_fixed_nm.dart';
 
 import '../presentation/widgets/products_sidebar.dart';
@@ -15,7 +17,6 @@ import 'screens/data_table2_tests.dart';
 import 'screens/paginated_data_table.dart';
 import 'screens/paginated_data_table2.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-
 
 const String initialRoute = '/';
 
@@ -88,29 +89,29 @@ Scaffold _getScaffold(BuildContext context, Widget body,
             )),
         options != null && options.isNotEmpty
             ? Flexible(
-                child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Padding(
-                        padding: const EdgeInsets.fromLTRB(12, 4, 0, 4),
-                        child: DropdownButton<String>(
-                            icon: const SizedBox(),
-                            dropdownColor: Colors.grey[300],
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium!
-                                .copyWith(color: Colors.black),
-                            value: defaultOption,
-                            onChanged: (v) {
-                              var r = _getCurrentRoute(context);
-                              Navigator.of(context).pushNamed(r, arguments: v);
-                            },
-                            items: options
-                                .map<DropdownMenuItem<String>>(
-                                    (v) => DropdownMenuItem<String>(
-                                          value: v,
-                                          child: Text(v),
-                                        ))
-                                .toList()))))
+            child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 4, 0, 4),
+                    child: DropdownButton<String>(
+                        icon: const SizedBox(),
+                        dropdownColor: Colors.grey[300],
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium!
+                            .copyWith(color: Colors.black),
+                        value: defaultOption,
+                        onChanged: (v) {
+                          var r = _getCurrentRoute(context);
+                          Navigator.of(context).pushNamed(r, arguments: v);
+                        },
+                        items: options
+                            .map<DropdownMenuItem<String>>(
+                                (v) => DropdownMenuItem<String>(
+                              value: v,
+                              child: Text(v),
+                            ))
+                            .toList()))))
             : const SizedBox()
       ]),
     ),
@@ -120,7 +121,7 @@ Scaffold _getScaffold(BuildContext context, Widget body,
 
 String _getCurrentRoute(BuildContext context) {
   return ModalRoute.of(context) != null &&
-          ModalRoute.of(context)!.settings.name != null
+      ModalRoute.of(context)!.settings.name != null
       ? ModalRoute.of(context)!.settings.name!
       : initialRoute;
 }
@@ -131,68 +132,75 @@ class TablePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return MaterialApp(
-      restorationScopeId: 'main',
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primaryColor: Colors.grey[300],
-      ),
-      initialRoute: '/datatable2', // Set initial route
-      routes: {
-        '/datatable2': (context) => _getPageWithDrawer(
-          context,
-          const DataTable2Demo(),  // Reference your demo page
-          'DataTable2',
-        ),
-        '/datatable2simple': (context) => _getPageWithDrawer(
-          context,
-          const DataTable2SimpleDemo(),
-          'DataTable2 Simple',
-        ),
-        '/datatable2scrollup': (context) => _getPageWithDrawer(
-          context,
-          const DataTable2ScrollupDemo(),
-          'Scroll-up Table',
-        ),
-        '/datatable2fixedmn': (context) => _getPageWithDrawer(
-          context,
-          const DataTable2FixedNMDemo(),
-          'Fixed Rows/Cols',
-        ),
-        '/paginated2': (context) => _getPageWithDrawer(
-          context,
-          const PaginatedDataTable2Demo(),
-          'Paginated Table',
-        ),
-        '/asyncpaginated2': (context) => _getPageWithDrawer(
-          context,
-          const AsyncPaginatedDataTable2Demo(),
-          'Async Paginated Table',
-        ),
-        '/datatable': (context) => _getPageWithDrawer(
-          context,
-          const DataTableDemo(),
-          'DataTable',
-        ),
-        '/paginated': (context) => _getPageWithDrawer(
-          context,
-          const PaginatedDataTableDemo(),
-          'Paginated DataTable',
-        ),
-        '/datatable2tests': (context) => _getPageWithDrawer(
-          context,
-          const DataTable2Tests(),
-          'Unit Tests Preview',
-        ),
+    return ScreenUtilInit(
+      designSize: const Size(360, 690), // Set your design size here
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context, child) {
+        return MaterialApp(
+          restorationScopeId: 'main',
+          title: 'Flutter Demo',
+          theme: ThemeData(
+            primaryColor: Colors.grey[300],
+          ),
+          initialRoute: '/datatable2', // Set initial route
+          routes: {
+            '/datatable2': (context) => _getPageWithDrawer(
+              context,
+              const DataTable2Demo(),  // Reference your demo page
+              'DataTable2',
+            ),
+            '/datatable2simple': (context) => _getPageWithDrawer(
+              context,
+              const DataTable2SimpleDemo(),
+              'DataTable2 Simple',
+            ),
+            '/datatable2scrollup': (context) => _getPageWithDrawer(
+              context,
+              const DataTable2ScrollupDemo(),
+              'Scroll-up Table',
+            ),
+            '/datatable2fixedmn': (context) => _getPageWithDrawer(
+              context,
+              const DataTable2FixedNMDemo(),
+              'Fixed Rows/Cols',
+            ),
+            '/paginated2': (context) => _getPageWithDrawer(
+              context,
+              const PaginatedDataTable2Demo(),
+              'Paginated Table',
+            ),
+            '/asyncpaginated2': (context) => _getPageWithDrawer(
+              context,
+              const AsyncPaginatedDataTable2Demo(),
+              'Async Paginated Table',
+            ),
+            '/datatable': (context) => _getPageWithDrawer(
+              context,
+              const DataTableDemo(),
+              'DataTable',
+            ),
+            '/paginated': (context) => _getPageWithDrawer(
+              context,
+              const PaginatedDataTableDemo(),
+              'Paginated DataTable',
+            ),
+            '/datatable2tests': (context) => _getPageWithDrawer(
+              context,
+              const DataTable2Tests(),
+              'Unit Tests Preview',
+            ),
+          },
+          localizationsDelegates: const [GlobalMaterialLocalizations.delegate],
+          supportedLocales: const [
+            Locale('en', ''),
+            Locale('be', ''),
+            Locale('ru', ''),
+            Locale('fr', ''),
+          ],
+          locale: const Locale('en', ''),
+        );
       },
-      localizationsDelegates: const [GlobalMaterialLocalizations.delegate],
-      supportedLocales: const [
-        Locale('en', ''),
-        Locale('be', ''),
-        Locale('ru', ''),
-        Locale('fr', ''),
-      ],
-      locale: const Locale('en', ''),
     );
   }
 
@@ -255,4 +263,3 @@ class TablePage extends ConsumerWidget {
     );
   }
 }
-

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/utils/responsive_utils.dart';
 import '../../data/models/product.dart';
 import '../../data/notifiers/product_notifier.dart';
 import '../../main.dart';
@@ -120,9 +121,8 @@ class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
     });
   }
 
-  void _showFullScreenImage(String? imageUrl) {
+  void _showFullScreenImage(String? imageUrl, ThemeData theme) {
     if (imageUrl != null) {
-      final theme = ref.watch(themeProvider);
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (context) => Scaffold(
@@ -140,9 +140,7 @@ class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
                 maxScale: 4,
                 child: CachedNetworkImage(
                   imageUrl: imageUrl,
-                  errorWidget: (context, error, stackTrace) {
-                    return Text('Error loading image', style: theme.textTheme.bodyMedium);
-                  },
+                  errorWidget: (context, error, stackTrace) => Text('Error loading image', style: theme.textTheme.bodyMedium),
                 ),
               ),
             ),
@@ -212,52 +210,62 @@ class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Sorting Dropdown
-          Container(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: DropdownButton<String>(
-              value: null,  // Initial value (null for default "Sort by")
-              hint: const Text('Sort by'),
-              onChanged: (value) {
-                switch (value) {
-                  case 'ID (Low to High)':
-                    _sort<num>((product) => product.id, true);
-                    break;
-                  case 'Title (A-Z)':
-                    _sort<String>((product) => product.title, true);
-                    break;
-                  case 'Price (Low to High)':
-                    _sort<num>((product) => product.price, true);
-                    break;
-                  case 'Date (Newest First)':
-                    _sort<DateTime>((product) => product.creationAt ?? DateTime.now(), false);
-                    break;
-                }
-              },
-              items: [
-                'ID (Low to High)',
-                'Title (A-Z)',
-                'Price (Low to High)',
-                'Date (Newest First)',
-              ].map<DropdownMenuItem<String>>((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-            ),
-          ),
-          Expanded(
-            child: _buildDataTable(filteredProducts, theme, MediaQuery.of(context).size.width, MediaQuery.of(context).size.height),
-          ),
-        ],
-      ),
+      body: ResponsiveUtils.isMobile(context)
+          ? _buildMobileView(filteredProducts, theme)
+          : _buildDataTable(filteredProducts, theme),
     );
   }
 
-  Widget _buildDataTable(List<Product> products, ThemeData theme, double screenWidth, double screenHeight) {
+  Widget _buildMobileView(List<Product> products, ThemeData theme) {
+    return ListView.builder(
+      itemCount: products.length,
+      itemBuilder: (context, index) {
+        final product = products[index];
+        return Card(
+          child: Column(
+            children: [
+              ListTile(
+                title: Text(product.title, style: theme.textTheme.titleMedium),
+                subtitle: Text('ID: ${product.id}'),
+                trailing: Text('Price: \$${product.price.toStringAsFixed(2)}'),
+              ),
+              ExpansionTile(
+                title: Text('More Details'),
+                children: [
+                  ListTile(
+                    title: Text('Description: ${product.description ?? 'N/A'}'),
+                  ),
+                  ListTile(
+                    title: Text('Created: ${product.creationAt != null ? DateFormat('yy-MM-dd').format(product.creationAt!) : 'N/A'}'),
+                  ),
+                  ListTile(
+                    title: Text('Updated: ${product.updatedAt != null ? DateFormat('yy-MM-dd').format(product.updatedAt!) : 'N/A'}'),
+                  ),
+                  ListTile(
+                    trailing: product.images != null && product.images!.isNotEmpty
+                        ? GestureDetector(
+                      onTap: () => _showFullScreenImage(product.images!.first, theme),
+                      child: CachedNetworkImage(
+                        imageUrl: product.images!.first,
+                        errorWidget: (context, url, error) => Text('Error loading image', style: theme.textTheme.bodyMedium),
+                        width: 120,
+                        height: 200,
+                        fit: BoxFit.fill,
+                      ),
+                    )
+                        : Text('No image', style: theme.textTheme.bodyMedium),
+                  ),
+                ],
+              ),
+
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDataTable(List<Product> products, ThemeData theme) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Container(
@@ -282,7 +290,7 @@ class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
                 itemCount: products.length,
                 itemBuilder: (context, index) {
                   final product = products[index];
-                  return _buildDataRow(theme, product);
+                  return _buildDataRow(theme, product );
                 },
               ),
             ),
@@ -320,7 +328,7 @@ class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
             flex: 1,
             child: Text(
               'Price',
-              style: theme.textTheme.titleSmall?.copyWith(color: theme.colorScheme .onPrimary),
+              style: theme.textTheme.titleSmall?.copyWith(color: theme.colorScheme.onPrimary),
             ),
           ),
           Expanded(
@@ -413,7 +421,7 @@ class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
           Expanded(
             flex: 1,
             child: GestureDetector(
-              onTap: () => _showFullScreenImage(product.images?.first),
+              onTap: () => _showFullScreenImage(product.images?.first, theme),
               child: product.images != null && product.images!.isNotEmpty
                   ? CachedNetworkImage(
                 imageUrl: product.images!.first,
