@@ -10,8 +10,7 @@ class ProductListScreen extends ConsumerStatefulWidget {
   const ProductListScreen({super.key});
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() =>
-      _ProductListScreenState();
+  ConsumerState<ConsumerStatefulWidget> createState() => _ProductListScreenState();
 }
 
 class _ProductListScreenState extends ConsumerState<ProductListScreen> {
@@ -23,30 +22,27 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final theme = ref.watch(themeProvider);  // Watch the theme provider
+    final theme = ref.watch(themeProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Products'),
-        actions: screenWidth > 600
-            ? [
+        actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: IconButton(
               icon: const Icon(Icons.search),
               onPressed: () {
-                // Implement search functionality here for larger screens
+                // Implement search functionality here
               },
             ),
           ),
-        ]
-            : null,
+        ],
       ),
-      drawer: const ExampleSidebarX(),  // Use ExampleSidebarX here instead of SidebarX
+      drawer: const ExampleSidebarX(),
       body: const Column(
         children: [
-          Expanded(child: ProductListBody()),  // Show product list body
+          Expanded(child: ProductListBody()),
         ],
       ),
     );

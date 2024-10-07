@@ -1,15 +1,13 @@
-import 'dart:convert';
-
+// lib/table/screens/data_table2.dart
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/utils/responsive_utils.dart';
 import '../../data/models/product.dart';
 import '../../data/notifiers/product_notifier.dart';
 import '../../main.dart';
+import '../../presentation/states/table_state.dart';
 
 class DataTable2Demo extends ConsumerStatefulWidget {
   const DataTable2Demo({super.key});
@@ -19,12 +17,6 @@ class DataTable2Demo extends ConsumerStatefulWidget {
 }
 
 class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
-  bool _sortAscending = true;
-  String _searchQuery = '';
-  List<Product> _displayedProducts = [];
-  int _currentPage = 1;
-  final int _itemsPerPage = 20;
-  bool _isLoading = false;
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -49,76 +41,53 @@ class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
   }
 
   Future<void> _loadInitialData() async {
-    setState(() {
-      _isLoading = true;
+    Future(() async {
+      ref.read(tableNotifierProvider.notifier).updateIsLoading(true);
+      final cachedProducts = await ref.read(tableNotifierProvider.notifier).getCachedData(
+        ref.read(tableNotifierProvider).currentPage,
+        ref.read(tableNotifierProvider).itemsPerPage,
+      );
+      if (cachedProducts.isNotEmpty) {
+        ref.read(tableNotifierProvider.notifier).updateDisplayedProducts(cachedProducts);
+        ref.read(tableNotifierProvider.notifier).updateIsLoading(false);
+      } else {
+        await _fetchAndCacheData();
+      }
     });
-    final cachedProducts = await _getCachedData(_currentPage, _itemsPerPage);
-    if (cachedProducts.isNotEmpty) {
-      setState(() {
-        _displayedProducts = cachedProducts;
-        _isLoading = false;
-      });
-    } else {
-      await _fetchAndCacheData();
-    }
   }
 
   Future<void> _loadMoreData() async {
-    if (!_isLoading) {
-      setState(() {
-        _isLoading = true;
-        _currentPage++;
-      });
+    if (!ref.read(tableNotifierProvider).isLoading) {
+      ref.read(tableNotifierProvider.notifier).updateIsLoading(true);
+      ref.read(tableNotifierProvider.notifier).updateCurrentPage(
+        ref.read(tableNotifierProvider).currentPage + 1,
+      );
       await _fetchAndCacheData();
     }
   }
 
   Future<void> _fetchAndCacheData() async {
     final productNotifier = ref.read(productNotifierProvider);
-    final newProducts = await productNotifier.fetchProducts(_currentPage, _itemsPerPage);
-    await _cacheData(newProducts, _currentPage);
-    setState(() {
-      _displayedProducts.addAll(newProducts);
-      _isLoading = false;
+    final newProducts = await productNotifier.fetchProducts(
+      ref.read(tableNotifierProvider).currentPage,
+      ref.read(tableNotifierProvider).itemsPerPage,
+    );
+    await ref.read(tableNotifierProvider.notifier).cacheData(newProducts, ref.read(tableNotifierProvider).currentPage);
+    ref.read(tableNotifierProvider.notifier).updateDisplayedProducts(
+      [...ref.read(tableNotifierProvider).displayedProducts, ...newProducts],
+    );
+    ref.read(tableNotifierProvider.notifier).updateIsLoading(false);
+  }
+
+  void _sort<T>(Comparable<T> Function(Product p) getField, bool ascending) {
+    ref.read(tableNotifierProvider.notifier).updateSortAscending(ascending);
+    final sortedProducts = [...ref.read(tableNotifierProvider).displayedProducts];
+    sortedProducts.sort((a, b) {
+      final aValue = getField(a);
+      final bValue = getField(b);
+      return ascending ? Comparable.compare(aValue, bValue) : Comparable.compare(bValue, aValue);
     });
-  }
-
-  Future<void> _cacheData(List<Product> products, int page) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final jsonString = await compute(_encodeProducts, products);
-    await prefs.setString('cached_products_page_$page', jsonString);
-  }
-
-  static String _encodeProducts(List<Product> products) {
-    return jsonEncode(products.map((product) => product.toJson()).toList());
-  }
-
-  Future<List<Product>> _getCachedData(int page, int itemsPerPage) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final jsonString = prefs.getString('cached_products_page_$page');
-    if (jsonString != null) {
-      final List<dynamic> jsonData = await compute(_decodeJson, jsonString);
-      return jsonData.map((json) => Product.fromJson(json)).toList();
-    }
-    return [];
-  }
-
-  static List<dynamic> _decodeJson(String jsonString) {
-    return jsonDecode(jsonString);
-  }
-
-  void _sort<T>(
-      Comparable<T> Function(Product p) getField,
-      bool ascending,
-      ) {
-    setState(() {
-      _sortAscending = ascending;
-      _displayedProducts.sort((a, b) {
-        final aValue = getField(a);
-        final bValue = getField(b);
-        return ascending ? Comparable.compare(aValue, bValue) : Comparable.compare(bValue, aValue);
-      });
-    });
+    ref.read(tableNotifierProvider.notifier).updateDisplayedProducts(sortedProducts);
   }
 
   void _showFullScreenImage(String? imageUrl, ThemeData theme) {
@@ -152,23 +121,66 @@ class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
   }
 
   List<Product> _getFilteredProducts(List<Product> products) {
-    if (_searchQuery.isEmpty) {
+    final searchQuery = ref.read(tableNotifierProvider).searchQuery;
+    if (searchQuery.isEmpty) {
       return products;
     }
     return products.where((product) {
+      final id = product.id.toString();
       final title = product.title.toLowerCase();
-      final description = product.description?.toLowerCase() ?? '';
-      return title.contains(_searchQuery.toLowerCase()) || description.contains(_searchQuery.toLowerCase());
+      final price = product.price.toString();
+      return id.contains(searchQuery.toLowerCase()) ||
+          title.contains(searchQuery.toLowerCase()) ||
+          price.contains(searchQuery.toLowerCase());
     }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = ref.watch(themeProvider);
-    final filteredProducts = _getFilteredProducts(_displayedProducts);
+    final filteredProducts = _getFilteredProducts(ref.watch(tableNotifierProvider).displayedProducts);
     return Scaffold(
       appBar: AppBar(
-        title: Text('DataTable Demo', style: theme.textTheme.titleLarge),
+        title: Row(
+          children: [
+            PopupMenuButton<int>(
+              icon: Icon(Icons.sort, color: theme.colorScheme.onPrimary),
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 1,
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.sort_by_alpha, color: theme.colorScheme.onPrimary),
+                        onPressed: () => _sort((p) => p.title, ref.read(tableNotifierProvider).sortAscending),
+                        tooltip: 'Sort by Title',
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.sort, color: theme.colorScheme.onPrimary),
+                        onPressed: () => _sort((p) => p.price, ref.read(tableNotifierProvider).sortAscending),
+                        tooltip: 'Sort by Price',
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.arrow_upward, color: theme.colorScheme.onPrimary),
+                        onPressed: () => _sort((p) => p.id, true),
+                        tooltip: 'Sort by ID Ascending',
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.arrow_downward, color: theme.colorScheme.onPrimary),
+                        onPressed: () => _sort((p) => p.id, false),
+                        tooltip: 'Sort by ID Descending',
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              color: theme.colorScheme.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            )
+          ],
+        ),
         backgroundColor: theme.colorScheme.primary,
         actions: [
           IconButton(
@@ -179,14 +191,12 @@ class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
                 builder: (context) => AlertDialog(
                   title: Text('Search', style: theme.textTheme.titleMedium),
                   content: TextField(
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       labelText: 'Search',
                     ),
                     onChanged: (query) {
-                      setState(() {
-                        _searchQuery = query;
-                      });
+                      ref.read(tableNotifierProvider.notifier).updateSearchQuery(query);
                     },
                   ),
                   actions: [
@@ -197,11 +207,18 @@ class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
                     TextButton(
                       onPressed: () {
                         Navigator.of(context).pop();
-                        setState(() {
-                          _searchQuery = '';
-                        });
+                        ref.read(tableNotifierProvider.notifier).updateSearchQuery('');
                       },
                       child: Text('Clear', style: theme.textTheme.bodyMedium),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        ref.read(tableNotifierProvider.notifier).updateDisplayedProducts(
+                          _getFilteredProducts(ref.read(tableNotifierProvider).displayedProducts),
+                        );
+                      },
+                      child: Text('Search', style: theme.textTheme.bodyMedium),
                     ),
                   ],
                 ),
@@ -230,7 +247,7 @@ class DataTable2DemoState extends ConsumerState<DataTable2Demo> {
                 trailing: Text('Price: \$${product.price.toStringAsFixed(2)}'),
               ),
               ExpansionTile(
-                title: Text('More Details'),
+                title: const Text('More Details'),
                 children: [
                   ListTile(
                     title: Text('Description: ${product.description ?? 'N/A'}'),

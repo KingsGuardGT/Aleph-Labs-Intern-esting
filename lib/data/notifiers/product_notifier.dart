@@ -1,4 +1,4 @@
-import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
@@ -12,12 +12,16 @@ final productNotifierProvider = ChangeNotifierProvider<ProductNotifier>((ref) {
   return ProductNotifier(ref.watch(productRepositoryProvider));
 });
 
+
 class ProductNotifier extends ChangeNotifier {
   final ProductRepository _productRepository;
   static const int _pageSize = 20;
 
   final PagingController<int, Product> pagingController = PagingController(firstPageKey: 1);
   List<Product> _sortedProducts = [];
+  List<Product> _products = [];
+  Product? _currentProduct;
+  int? _currentIndex;
   bool _isSorting = false;
   String _errorMessage = '';
 
@@ -27,36 +31,37 @@ class ProductNotifier extends ChangeNotifier {
     });
   }
 
+  Product? get currentProduct => _currentProduct;
+  int? get currentIndex => _currentIndex;
   List<Product> get sortedProducts => _sortedProducts;
+  List<Product> get products => _products;
   bool get isSorting => _isSorting;
   String get errorMessage => _errorMessage;
 
-  // Fetch paginated data either from cache or API
+  void setCurrentProduct(Product product, int index) {
+    _currentProduct = product;
+    _currentIndex = index;
+    notifyListeners();
+  }
+
   Future<void> _fetchPage(int pageKey) async {
     try {
-      // First, try to load cached products
-      final cachedProducts = await _getCachedData(pageKey);
-      if (cachedProducts.isNotEmpty) {
-        // If cached products exist, use them
-        _appendPage(cachedProducts, pageKey);
+      final newProducts = await fetchProducts(pageKey, _pageSize);
+      _products.addAll(newProducts);
+      final isLastPage = newProducts.length < _pageSize;
+      if (isLastPage) {
+        pagingController.appendLastPage(newProducts);
       } else {
-        // Otherwise, fetch fresh data from API
-        final newProducts = await fetchProducts(pageKey, _pageSize);
-        // Cache the fetched data
-        await _cacheData(newProducts, pageKey);
-        // Append the new products to the list
-        _appendPage(newProducts, pageKey);
+        pagingController.appendPage(newProducts, pageKey + 1);
       }
-      _errorMessage = ''; // Reset error message on success
+      _errorMessage = '';
     } catch (error) {
-      // Handle errors gracefully and show the error message in the UI
       pagingController.error = error;
       _errorMessage = error.toString();
     }
-    notifyListeners(); // Notify listeners only once after all operations
+    notifyListeners();
   }
 
-  // Fetch products from the repository
   Future<List<Product>> fetchProducts(int page, int limit) async {
     try {
       return await _productRepository.fetchProducts(page: page, limit: limit);
@@ -67,42 +72,6 @@ class ProductNotifier extends ChangeNotifier {
   }
 
   // Append new products to the PagingController
-  void _appendPage(List<Product> products, int pageKey) {
-    final isLastPage = products.length < _pageSize;
-    if (isLastPage) {
-      pagingController.appendLastPage(products);
-    } else {
-      pagingController.appendPage(products, pageKey + 1);
-    }
-  }
-
-  // Cache fetched data using SharedPreferences
-  Future<void> _cacheData(List<Product> products, int page) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final jsonString = await compute(_encodeProducts, products); // Offload encoding to a background isolate
-    await prefs.setString('cached_products_page_$page', jsonString);
-  }
-
-  // Encode products for storage (using `compute` for large data)
-  static String _encodeProducts(List<Product> products) {
-    return jsonEncode(products.map((product) => product.toJson()).toList());
-  }
-
-  // Retrieve cached data from SharedPreferences
-  Future<List<Product>> _getCachedData(int page) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final jsonString = prefs.getString('cached_products_page_$page');
-    if (jsonString != null) {
-      final List<dynamic> jsonData = await compute(_decodeJson, jsonString); // Offload decoding to a background isolate
-      return jsonData.map((json) => Product.fromJson(json)).toList();
-    }
-    return [];
-  }
-
-  // Decode JSON data (using `compute` for large data)
-  static List<dynamic> _decodeJson(String jsonString) {
-    return jsonDecode(jsonString);
-  }
 
   // Sort the products and update the displayed list
   Future<void> sortProducts(Comparator<Product> comparator) async {
@@ -124,6 +93,10 @@ class ProductNotifier extends ChangeNotifier {
       _isSorting = false; // Mark sorting as complete
       notifyListeners(); // Notify listeners after sorting is done
     }
+  }
+
+  Product getProduct(int index) {
+    return _products[index];
   }
 
   // Update the list of sorted products
@@ -159,5 +132,6 @@ class ProductNotifier extends ChangeNotifier {
     pagingController.dispose(); // Clean up PagingController
     super.dispose(); // Call the parent dispose
   }
+
 }
 

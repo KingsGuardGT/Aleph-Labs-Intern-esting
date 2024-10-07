@@ -25,7 +25,9 @@ class ScreensExample extends ConsumerWidget {
                 child: Center(
                   child: Text(
                     pageTitle,
-                    style: theme.textTheme.headlineSmall,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontSize: 18,  // Fixed font size
+                    ),
                   ),
                 ),
               ),
